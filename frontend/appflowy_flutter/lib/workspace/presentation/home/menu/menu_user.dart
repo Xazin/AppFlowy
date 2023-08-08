@@ -81,7 +81,7 @@ class MenuUser extends StatelessWidget {
         borderRadius: Corners.s5Border,
         child: CircleAvatar(
           backgroundColor: Colors.transparent,
-          child: svgWidget('emoji/$iconUrl'),
+          child: FlowySvg(name: 'emoji/$iconUrl'),
         ),
       ),
     );
@@ -127,7 +127,8 @@ class MenuUser extends StatelessWidget {
         },
         icon: SizedBox.square(
           dimension: 20,
-          child: svgWidget(
+          child: FlowySvg(
+            name:
             "home/settings",
             color: Theme.of(context).colorScheme.tertiary,
           ),

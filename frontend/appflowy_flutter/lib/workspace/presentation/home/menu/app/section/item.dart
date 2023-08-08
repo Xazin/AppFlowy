@@ -208,7 +208,8 @@ class ViewDisclosureButton extends StatelessWidget {
           hoverColor: Colors.transparent,
           iconPadding: const EdgeInsets.all(5),
           width: 26,
-          icon: svgWidget(
+          icon: FlowySvg(
+            name:
             "editor/details",
             color: Theme.of(context).iconTheme.color,
           ),

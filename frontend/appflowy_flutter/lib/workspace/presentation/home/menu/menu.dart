@@ -246,8 +246,8 @@ class MenuTopBar extends StatelessWidget {
       return Container();
     }
     return (Theme.of(context).brightness == Brightness.dark
-        ? svgWidget("flowy_logo_dark_mode", size: const Size(92, 17))
-        : svgWidget("flowy_logo_with_text", size: const Size(92, 17)));
+        ? const FlowySvg(name: "flowy_logo_dark_mode", size: Size(92, 17))
+        : const FlowySvg(name: "flowy_logo_with_text", size: Size(92, 17)));
   }
 
   @override
@@ -273,7 +273,8 @@ class MenuTopBar extends StatelessWidget {
                         .read<HomeSettingBloc>()
                         .add(const HomeSettingEvent.collapseMenu()),
                     iconPadding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
-                    icon: svgWidget(
+                    icon: FlowySvg(
+                      name:
                       "home/hide_menu",
                       color: Theme.of(context).iconTheme.color,
                     ),
