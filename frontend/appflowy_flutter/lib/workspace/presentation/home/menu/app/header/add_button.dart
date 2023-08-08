@@ -67,7 +67,7 @@ class AddButton extends StatelessWidget {
                 hoverColor: AFThemeExtension.of(context).greySelect,
               ),
               builder: (context, onHover) => const FlowySvg(
-                FlowySvgs.add,
+                FlowySvgs.add_home,
               ),
             ),
           ),
@@ -138,7 +138,7 @@ class ImportActionWrapper extends ActionCell {
 
   @override
   Widget? leftIcon(Color iconColor) => const FlowySvg(
-        FlowySvgs.import_,
+        FlowySvgs.import_editor,
       );
 
   @override

@@ -170,17 +170,17 @@ extension ViewDisclosureExtension on ViewDisclosureAction {
   Widget icon(Color iconColor, {ViewState? state}) {
     switch (this) {
       case ViewDisclosureAction.rename:
-        return const FlowySvg(FlowySvgs.edit);
+        return const FlowySvg(FlowySvgs.edit_editor);
       case ViewDisclosureAction.delete:
-        return const FlowySvg(FlowySvgs.delete);
+        return const FlowySvg(FlowySvgs.delete_editor);
       case ViewDisclosureAction.duplicate:
-        return const FlowySvg(FlowySvgs.copy);
+        return const FlowySvg(FlowySvgs.copy_editor);
       case ViewDisclosureAction.favorite:
         return state!.view.isFavorite
-            ? const FlowySvg(FlowySvgs.favorite)
-            : const FlowySvg(FlowySvgs.unfavorite);
+            ? const FlowySvg(FlowySvgs.favorite_home)
+            : const FlowySvg(FlowySvgs.unfavorite_home);
       case ViewDisclosureAction.openInNewTab:
-        return const FlowySvg(FlowySvgs.expander);
+        return const FlowySvg(FlowySvgs.expander_grid);
     }
   }
 }
@@ -209,7 +209,7 @@ class ViewDisclosureButton extends StatelessWidget {
           iconPadding: const EdgeInsets.all(5),
           width: 26,
           icon: FlowySvg(
-            FlowySvgs.details,
+            FlowySvgs.details_editor,
             color: Theme.of(context).iconTheme.color,
           ),
           onPressed: () {
