@@ -1,3 +1,4 @@
+import 'package:appflowy/generated/flowy_svgs.g.dart';
 import 'package:appflowy/workspace/presentation/widgets/dialogs.dart';
 import 'package:appflowy/workspace/presentation/widgets/pop_up_action.dart';
 import 'package:appflowy_backend/protobuf/flowy-folder2/view.pb.dart';
@@ -11,7 +12,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:appflowy/workspace/application/app/app_bloc.dart';
 import 'package:styled_widget/styled_widget.dart';
 import 'package:appflowy/generated/locale_keys.g.dart';
-import 'package:flowy_infra/image.dart';
 
 import '../menu_app.dart';
 import 'add_button.dart';
@@ -143,9 +143,9 @@ extension AppDisclosureExtension on AppDisclosureAction {
   Widget icon(Color iconColor) {
     switch (this) {
       case AppDisclosureAction.rename:
-        return const FlowySvg(name: 'editor/edit');
+        return const FlowySvg(FlowySvgs.edit);
       case AppDisclosureAction.delete:
-        return const FlowySvg(name: 'editor/delete');
+        return const FlowySvg(FlowySvgs.delete);
     }
   }
 }

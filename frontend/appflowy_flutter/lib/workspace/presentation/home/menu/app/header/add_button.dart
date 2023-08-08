@@ -1,3 +1,4 @@
+import 'package:appflowy/generated/flowy_svgs.g.dart';
 import 'package:appflowy/plugins/document/document.dart';
 import 'package:appflowy/startup/plugin/plugin.dart';
 import 'package:appflowy/startup/startup.dart';
@@ -5,7 +6,6 @@ import 'package:appflowy/workspace/presentation/home/menu/app/header/import/impo
 import 'package:appflowy/workspace/presentation/home/menu/app/header/import/import_type.dart';
 import 'package:appflowy/workspace/presentation/widgets/pop_up_action.dart';
 import 'package:appflowy_popover/appflowy_popover.dart';
-import 'package:flowy_infra/image.dart';
 import 'package:flowy_infra/theme_extension.dart';
 import 'package:flowy_infra_ui/style_widget/hover.dart';
 import 'package:flutter/material.dart';
@@ -67,7 +67,7 @@ class AddButton extends StatelessWidget {
                 hoverColor: AFThemeExtension.of(context).greySelect,
               ),
               builder: (context, onHover) => const FlowySvg(
-                name: 'home/add',
+                FlowySvgs.add,
               ),
             ),
           ),
@@ -121,7 +121,7 @@ class AddButtonActionWrapper extends ActionCell {
   AddButtonActionWrapper({required this.pluginBuilder});
 
   @override
-  Widget? leftIcon(Color iconColor) => FlowySvg(name: pluginBuilder.menuIcon);
+  Widget? leftIcon(Color iconColor) => FlowySvg(pluginBuilder.icon);
 
   @override
   String get name => pluginBuilder.menuName;
@@ -138,7 +138,7 @@ class ImportActionWrapper extends ActionCell {
 
   @override
   Widget? leftIcon(Color iconColor) => const FlowySvg(
-        name: 'editor/import',
+        FlowySvgs.import_,
       );
 
   @override

@@ -1,3 +1,4 @@
+import 'package:appflowy/generated/flowy_svgs.g.dart';
 import 'package:appflowy/startup/startup.dart';
 import 'package:appflowy/workspace/application/favorite/favorite_bloc.dart';
 import 'package:appflowy/workspace/application/tabs/tabs_bloc.dart';
@@ -14,7 +15,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:styled_widget/styled_widget.dart';
 import 'package:appflowy/generated/locale_keys.g.dart';
-import 'package:flowy_infra/image.dart';
 
 import 'package:appflowy/workspace/presentation/widgets/pop_up_action.dart';
 import 'package:appflowy_popover/appflowy_popover.dart';
@@ -170,17 +170,17 @@ extension ViewDisclosureExtension on ViewDisclosureAction {
   Widget icon(Color iconColor, {ViewState? state}) {
     switch (this) {
       case ViewDisclosureAction.rename:
-        return const FlowySvg(name: 'editor/edit');
+        return const FlowySvg(FlowySvgs.edit);
       case ViewDisclosureAction.delete:
-        return const FlowySvg(name: 'editor/delete');
+        return const FlowySvg(FlowySvgs.delete);
       case ViewDisclosureAction.duplicate:
-        return const FlowySvg(name: 'editor/copy');
+        return const FlowySvg(FlowySvgs.copy);
       case ViewDisclosureAction.favorite:
         return state!.view.isFavorite
-            ? const FlowySvg(name: 'home/favorite')
-            : const FlowySvg(name: 'home/unfavorite');
+            ? const FlowySvg(FlowySvgs.favorite)
+            : const FlowySvg(FlowySvgs.unfavorite);
       case ViewDisclosureAction.openInNewTab:
-        return const FlowySvg(name: 'grid/expander');
+        return const FlowySvg(FlowySvgs.expander);
     }
   }
 }
@@ -209,8 +209,7 @@ class ViewDisclosureButton extends StatelessWidget {
           iconPadding: const EdgeInsets.all(5),
           width: 26,
           icon: FlowySvg(
-            name:
-            "editor/details",
+            FlowySvgs.details,
             color: Theme.of(context).iconTheme.color,
           ),
           onPressed: () {

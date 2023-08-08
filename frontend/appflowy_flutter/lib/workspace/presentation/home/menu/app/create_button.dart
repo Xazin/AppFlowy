@@ -1,7 +1,7 @@
+import 'package:appflowy/generated/flowy_svgs.g.dart';
 import 'package:appflowy/workspace/presentation/home/home_sizes.dart';
 import 'package:appflowy/workspace/presentation/widgets/dialogs.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flowy_infra/image.dart';
 import 'package:flowy_infra/size.dart';
 import 'package:flowy_infra_ui/style_widget/button.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +27,7 @@ class NewAppButton extends StatelessWidget {
           shape: BoxShape.circle,
           color: Theme.of(context).colorScheme.surface,
         ),
-        child: const FlowySvg(name: "home/new_app"),
+        child: const FlowySvg(FlowySvgs.new_app),
       ),
       padding: EdgeInsets.symmetric(horizontal: Insets.l, vertical: 20),
     );

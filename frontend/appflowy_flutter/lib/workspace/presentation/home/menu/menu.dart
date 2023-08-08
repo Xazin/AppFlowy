@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 
 import 'package:appflowy/core/frameless_window.dart';
+import 'package:appflowy/generated/flowy_svgs.g.dart';
 import 'package:appflowy/generated/locale_keys.g.dart';
 import 'package:appflowy/plugins/trash/menu.dart';
 import 'package:appflowy/startup/startup.dart';
@@ -14,7 +15,6 @@ import 'package:appflowy_backend/protobuf/flowy-user/protobuf.dart'
     show UserProfilePB;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:expandable/expandable.dart';
-import 'package:flowy_infra/image.dart';
 import 'package:flowy_infra/size.dart';
 import 'package:flowy_infra/time/duration.dart';
 import 'package:flowy_infra_ui/style_widget/icon_button.dart';
@@ -246,8 +246,8 @@ class MenuTopBar extends StatelessWidget {
       return Container();
     }
     return (Theme.of(context).brightness == Brightness.dark
-        ? const FlowySvg(name: "flowy_logo_dark_mode", size: Size(92, 17))
-        : const FlowySvg(name: "flowy_logo_with_text", size: Size(92, 17)));
+        ? const FlowySvg(FlowySvgs.flowy_logo_dark_mode, size: Size(92, 17))
+        : const FlowySvg(FlowySvgs.flowy_logo_with_text, size: Size(92, 17)));
   }
 
   @override
@@ -274,8 +274,7 @@ class MenuTopBar extends StatelessWidget {
                         .add(const HomeSettingEvent.collapseMenu()),
                     iconPadding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
                     icon: FlowySvg(
-                      name:
-                      "home/hide_menu",
+                      FlowySvgs.hide_menu,
                       color: Theme.of(context).iconTheme.color,
                     ),
                   ),
