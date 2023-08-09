@@ -128,7 +128,7 @@ class MenuUser extends StatelessWidget {
         icon: SizedBox.square(
           dimension: 20,
           child: FlowySvg(
-            FlowySvgs.settings_home,
+            FlowySvgs.settings_m,
             color: Theme.of(context).colorScheme.tertiary,
           ),
         ),

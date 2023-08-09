@@ -27,7 +27,7 @@ class NewAppButton extends StatelessWidget {
           shape: BoxShape.circle,
           color: Theme.of(context).colorScheme.surface,
         ),
-        child: const FlowySvg(FlowySvgs.new_app_home),
+        child: const FlowySvg(FlowySvgs.new_app_s),
       ),
       padding: EdgeInsets.symmetric(horizontal: Insets.l, vertical: 20),
     );

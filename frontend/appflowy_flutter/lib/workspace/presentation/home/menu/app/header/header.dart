@@ -143,9 +143,9 @@ extension AppDisclosureExtension on AppDisclosureAction {
   Widget icon(Color iconColor) {
     switch (this) {
       case AppDisclosureAction.rename:
-        return const FlowySvg(FlowySvgs.edit_editor);
+        return const FlowySvg(FlowySvgs.edit_s);
       case AppDisclosureAction.delete:
-        return const FlowySvg(FlowySvgs.delete_editor);
+        return const FlowySvg(FlowySvgs.delete_s);
     }
   }
 }
