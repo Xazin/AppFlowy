@@ -7,6 +7,8 @@
 
 #include "flutter/generated_plugin_registrant.h"
 
+#include <bitsdojo_window_linux/bitsdojo_window_plugin.h>
+
 struct _MyApplication
 {
   GtkApplication parent_instance;
@@ -61,14 +63,18 @@ static void my_application_activate(GApplication *application)
     gtk_window_set_title(window, "AppFlowy");
   }
 
-  gtk_window_set_default_size(window, 1280, 720);
   gtk_widget_show(GTK_WIDGET(window));
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
   fl_dart_project_set_dart_entrypoint_arguments(project, self->dart_entrypoint_arguments);
 
   FlView *view = fl_view_new(project);
-  gtk_widget_show(GTK_WIDGET(view));
+
+  // Bitsdojo Window
+  auto bdw = bitsdojo_window_from(window);
+  bdw->setCustomFrame(true);
+  gtk_widget_show(GTK_WIDGET(window));
+
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(view));
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));

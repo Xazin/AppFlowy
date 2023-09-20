@@ -107,6 +107,12 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   super_clipboard: ^0.6.3
+  # Custom title bar for Windows/Linux
+  bitsdojo_window:
+    git:
+      url: https://github.com/Xazin/bitsdojo_window.git
+      path: bitsdojo_window/
+      ref: 14de0eb
 
 dev_dependencies:
   flutter_lints: ^2.0.1

@@ -90,6 +90,51 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.11.0"
+  bitsdojo_window:
+    dependency: "direct main"
+    description:
+      path: bitsdojo_window
+      ref: "14de0eb"
+      resolved-ref: "14de0ebef42a85d51fcecb77f45bd92005c9d360"
+      url: "https://github.com/Xazin/bitsdojo_window.git"
+    source: git
+    version: "0.2.0"
+  bitsdojo_window_linux:
+    dependency: transitive
+    description:
+      path: bitsdojo_window_linux
+      ref: master
+      resolved-ref: "14de0ebef42a85d51fcecb77f45bd92005c9d360"
+      url: "https://github.com/Xazin/bitsdojo_window.git"
+    source: git
+    version: "0.2.0"
+  bitsdojo_window_macos:
+    dependency: transitive
+    description:
+      path: bitsdojo_window_macos
+      ref: master
+      resolved-ref: "14de0ebef42a85d51fcecb77f45bd92005c9d360"
+      url: "https://github.com/Xazin/bitsdojo_window.git"
+    source: git
+    version: "0.2.0"
+  bitsdojo_window_platform_interface:
+    dependency: transitive
+    description:
+      path: bitsdojo_window_platform_interface
+      ref: master
+      resolved-ref: "14de0ebef42a85d51fcecb77f45bd92005c9d360"
+      url: "https://github.com/Xazin/bitsdojo_window.git"
+    source: git
+    version: "0.2.0"
+  bitsdojo_window_windows:
+    dependency: transitive
+    description:
+      path: bitsdojo_window_windows
+      ref: master
+      resolved-ref: "14de0ebef42a85d51fcecb77f45bd92005c9d360"
+      url: "https://github.com/Xazin/bitsdojo_window.git"
+    source: git
+    version: "0.2.0"
   bloc:
     dependency: "direct main"
     description:
@@ -406,10 +451,10 @@ packages:
     dependency: transitive
     description:
       name: ffi
-      sha256: ed5337a5660c506388a9f012be0288fb38b49020ce2b45fe1f8b8323fe429f99
+      sha256: "7bf0adc28a23d395f19f3f1eb21dd7cfd1dd9f8e1c50051c069122e6853bc878"
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.2"
+    version: "2.1.0"
   file:
     dependency: transitive
     description:
@@ -422,10 +467,10 @@ packages:
     dependency: transitive
     description:
       name: file_picker
-      sha256: "9d6e95ec73abbd31ec54d0e0df8a961017e165aba1395e462e5b31ea0c165daf"
+      sha256: be325344c1f3070354a1d84a231a1ba75ea85d413774ec4bdf444c023342e030
       url: "https://pub.dev"
     source: hosted
-    version: "5.3.1"
+    version: "5.5.0"
   fixnum:
     dependency: "direct main"
     description:
@@ -1005,10 +1050,10 @@ packages:
     dependency: transitive
     description:
       name: path_provider_windows
-      sha256: d3f80b32e83ec208ac95253e0cd4d298e104fbc63cb29c5c69edaed43b0c69d6
+      sha256: "1cb68ba4cd3a795033de62ba1b7b4564dace301f952de6bfb3cd91b202b6ee96"
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.6"
+    version: "2.1.7"
   percent_indicator:
     dependency: "direct main"
     description:
@@ -1197,10 +1242,10 @@ packages:
     dependency: transitive
     description:
       name: rich_clipboard_windows
-      sha256: fa2a28e75ce4bcc9efc6d5d0e9788b76716cdaf3b7063c141fe8af12a315f414
+      sha256: "633198bcd74642bb03c4a628c7e350ee18bb391cd8c6132152f7c97ab250e901"
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.2"
+    version: "1.0.3"
   rxdart:
     dependency: transitive
     description:
@@ -1788,18 +1833,18 @@ packages:
     dependency: transitive
     description:
       name: win32
-      sha256: "5a751eddf9db89b3e5f9d50c20ab8612296e4e8db69009788d6c8b060a84191c"
+      sha256: c97defd418eef4ec88c0d1652cdce84b9f7b63dd7198e266d06ac1710d527067
       url: "https://pub.dev"
     source: hosted
-    version: "4.1.4"
+    version: "5.0.8"
   win32_registry:
     dependency: transitive
     description:
       name: win32_registry
-      sha256: "1c52f994bdccb77103a6231ad4ea331a244dbcef5d1f37d8462f713143b0bfae"
+      sha256: e4506d60b7244251bc59df15656a3093501c37fb5af02105a944d73eb95be4c9
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.0"
+    version: "1.1.1"
   window_manager:
     dependency: "direct main"
     description:

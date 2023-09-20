@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:appflowy/plugins/document/presentation/more/cubit/document_appearance_cubit.dart';
 import 'package:appflowy_editor/appflowy_editor.dart' hide Log;
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flowy_infra/theme.dart';
 import 'package:flowy_infra_ui/flowy_infra_ui.dart';
@@ -68,6 +71,13 @@ class InitAppWidgetTask extends LaunchTask {
         child: app,
       ),
     );
+
+    // Setup custom title bar
+    if (Platform.isLinux || Platform.isWindows) {
+      doWhenWindowReady(() {
+        appWindow.show();
+      });
+    }
 
     return Future(() => {});
   }
