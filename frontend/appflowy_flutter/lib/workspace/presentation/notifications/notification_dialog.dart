@@ -12,11 +12,23 @@ import 'package:flowy_infra_ui/widget/spacing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-extension _ReminderReady on ReminderPB {
-  DateTime get scheduledDate =>
-      DateTime.fromMillisecondsSinceEpoch(scheduledAt.toInt() * 1000);
+enum ReminderSortOption {
+  descending,
+  ascending,
+}
 
-  bool isBefore(DateTime date) => scheduledDate.isBefore(date);
+extension _ReminderSort on Iterable<ReminderPB> {
+  List<ReminderPB> sortByScheduledAt({
+    ReminderSortOption reminderSortOption = ReminderSortOption.descending,
+  }) =>
+      sorted(
+        (a, b) => switch (reminderSortOption) {
+          ReminderSortOption.descending =>
+            b.scheduledAt.compareTo(a.scheduledAt),
+          ReminderSortOption.ascending =>
+            a.scheduledAt.compareTo(b.scheduledAt),
+        },
+      );
 }
 
 class NotificationDialog extends StatelessWidget {
@@ -37,86 +49,133 @@ class NotificationDialog extends StatelessWidget {
       value: reminderBloc,
       child: BlocBuilder<ReminderBloc, ReminderState>(
         builder: (context, state) {
-          final shownReminders = state.reminders
-              .where((reminder) => reminder.isBefore(DateTime.now()))
-              .sorted((a, b) => b.scheduledAt.compareTo(a.scheduledAt));
+          final pastReminders = state.pastReminders.sortByScheduledAt();
+          final upcomingReminders = state.upcomingReminders.sortByScheduledAt();
 
-          return SingleChildScrollView(
+          return DefaultTabController(
+            length: 2,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(
-                              color: Theme.of(context).dividerColor,
-                            ),
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 4,
-                            horizontal: 10,
-                          ),
-                          child: FlowyText.semibold(
-                            LocaleKeys.notificationHub_title.tr(),
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                    ),
+                const TabBar(
+                  tabs: [
+                    Tab(child: Text('Inbox')),
+                    Tab(child: Text('Upcoming')),
                   ],
                 ),
-                const VSpace(4),
-                if (shownReminders.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Center(
-                      child: FlowyText.regular(
-                        LocaleKeys.notificationHub_empty.tr(),
-                      ),
-                    ),
-                  )
-                else
-                  ...shownReminders.map((reminder) {
-                    return NotificationItem(
-                      reminderId: reminder.id,
-                      key: ValueKey(reminder.id),
-                      title: reminder.title,
-                      scheduled: reminder.scheduledAt,
-                      body: reminder.message,
-                      isRead: reminder.isRead,
-                      onReadChanged: (isRead) => reminderBloc.add(
-                        ReminderEvent.update(
-                          ReminderUpdate(id: reminder.id, isRead: isRead),
-                        ),
-                      ),
-                      onDelete: () => reminderBloc
-                          .add(ReminderEvent.remove(reminderId: reminder.id)),
-                      onAction: () {
-                        final view = views.firstWhereOrNull(
-                          (view) => view.id == reminder.objectId,
-                        );
-
-                        if (view == null) {
-                          return;
-                        }
-
-                        reminderBloc.add(
-                          ReminderEvent.pressReminder(reminderId: reminder.id),
-                        );
-
-                        mutex.close();
-                      },
-                    );
-                  }),
+                TabBarView(
+                  children: [
+                    NotificationsView(
+                      shownReminders: pastReminders,
+                      reminderBloc: reminderBloc,
+                      views: views,
+                      mutex: mutex,
+                    )
+                  ],
+                ),
+                NotificationsView(
+                  mutex: mutex,
+                  shownReminders: upcomingReminders,
+                  reminderBloc: reminderBloc,
+                  views: views,
+                ),
               ],
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class NotificationsView extends StatelessWidget {
+  const NotificationsView({
+    super.key,
+    required this.shownReminders,
+    required this.reminderBloc,
+    required this.views,
+    required this.mutex,
+  });
+
+  final List<ReminderPB> shownReminders;
+  final ReminderBloc reminderBloc;
+  final List<ViewPB> views;
+  final PopoverMutex mutex;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Theme.of(context).dividerColor,
+                      ),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 4,
+                      horizontal: 10,
+                    ),
+                    child: FlowyText.semibold(
+                      LocaleKeys.notificationHub_title.tr(),
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const VSpace(4),
+          if (shownReminders.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Center(
+                child: FlowyText.regular(
+                  LocaleKeys.notificationHub_empty.tr(),
+                ),
+              ),
+            )
+          else
+            ...shownReminders.map((reminder) {
+              return NotificationItem(
+                reminderId: reminder.id,
+                key: ValueKey(reminder.id),
+                title: reminder.title,
+                scheduled: reminder.scheduledAt,
+                body: reminder.message,
+                isRead: reminder.isRead,
+                onReadChanged: (isRead) => reminderBloc.add(
+                  ReminderEvent.update(
+                    ReminderUpdate(id: reminder.id, isRead: isRead),
+                  ),
+                ),
+                onDelete: () =>
+                    reminderBloc.add(ReminderEvent.remove(reminder: reminder)),
+                onAction: () {
+                  final view = views.firstWhereOrNull(
+                    (view) => view.id == reminder.objectId,
+                  );
+
+                  if (view == null) {
+                    return;
+                  }
+
+                  reminderBloc.add(
+                    ReminderEvent.pressReminder(reminderId: reminder.id),
+                  );
+
+                  mutex.close();
+                },
+              );
+            }),
+        ],
       ),
     );
   }

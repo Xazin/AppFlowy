@@ -89,11 +89,12 @@ class _NotificationItemState extends State<NotificationItem> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Flexible(
-                                child: FlowyText.semibold(widget.title),
+                              FlowyText.semibold(
+                                widget.title,
+                                fontSize: 14,
                               ),
+                              const HSpace(8),
                               FlowyText.regular(
                                 _scheduledString(widget.scheduled),
                                 fontSize: 10,
