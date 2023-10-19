@@ -7,6 +7,8 @@ import 'package:appflowy_backend/protobuf/flowy-error/errors.pb.dart';
 import 'package:appflowy_backend/protobuf/flowy-folder2/view.pb.dart';
 
 class ViewBackendService {
+  const ViewBackendService();
+
   static Future<Either<ViewPB, FlowyError>> createView({
     /// The [layoutType] is the type of the view.
     required ViewLayoutPB layoutType,

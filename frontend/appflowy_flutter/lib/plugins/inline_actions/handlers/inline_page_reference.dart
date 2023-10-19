@@ -4,8 +4,15 @@ import 'package:appflowy/generated/locale_keys.g.dart';
 import 'package:appflowy/plugins/document/presentation/editor_plugins/mention/mention_block.dart';
 import 'package:appflowy/plugins/document/presentation/editor_plugins/mention/mention_page_block.dart';
 import 'package:appflowy/plugins/inline_actions/inline_actions_result.dart';
+import 'package:appflowy/startup/startup.dart';
+import 'package:appflowy/user/application/auth/auth_service.dart';
 import 'package:appflowy/workspace/application/view/view_service.dart';
+import 'package:appflowy/workspace/application/workspace/prelude.dart';
+import 'package:appflowy_backend/dispatch/dispatch.dart';
+import 'package:appflowy_backend/protobuf/flowy-error/errors.pb.dart';
+import 'package:appflowy_backend/protobuf/flowy-folder2/view.pb.dart';
 import 'package:appflowy_editor/appflowy_editor.dart';
+import 'package:dartz/dartz.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 class InlinePageReferenceService {
@@ -17,18 +24,49 @@ class InlinePageReferenceService {
   final String currentViewId;
 
   late final ViewBackendService service;
+  late final WorkspaceListener _workspaceListener;
   List<InlineActionsMenuItem> _items = [];
   List<InlineActionsMenuItem> _filtered = [];
 
   Future<void> init() async {
-    service = ViewBackendService();
+    service = const ViewBackendService();
+    _initWorkspaceListener();
 
-    _generatePageItems(currentViewId).then((value) {
+    final views = await service.fetchViews();
+    _generatePageItems(views).then((value) {
       _items = value;
       _filtered = value;
       _initCompleter.complete();
     });
   }
+
+  Future<void> _initWorkspaceListener() async {
+    final userOrFailure = await getIt<AuthService>().getUser();
+    final user = userOrFailure.fold((l) => null, (profile) => profile);
+
+    final workspaceOrFailure =
+        (await FolderEventGetCurrentWorkspace().send()).swap();
+    final workspaceSettings =
+        workspaceOrFailure.fold((l) => null, (workspace) => workspace);
+
+    if (user != null && workspaceSettings != null) {
+      _workspaceListener = WorkspaceListener(
+        user: user,
+        workspaceId: workspaceSettings.workspace.id,
+      )..start(appsChanged: _appsChanged);
+    }
+  }
+
+  void _appsChanged(Either<List<ViewPB>, FlowyError> viewsOrFailure) async =>
+      viewsOrFailure.fold(
+        (views) {
+          _generatePageItems(views).then((value) {
+            _items = value;
+            _filtered = value;
+          });
+        },
+        (_) => null,
+      );
 
   Future<List<InlineActionsMenuItem>> _filterItems(String? search) async {
     await _initCompleter.future;
@@ -61,9 +99,8 @@ class InlinePageReferenceService {
   }
 
   Future<List<InlineActionsMenuItem>> _generatePageItems(
-    String currentViewId,
+    List<ViewPB> views,
   ) async {
-    final views = await service.fetchViews();
     if (views.isEmpty) {
       return [];
     }
