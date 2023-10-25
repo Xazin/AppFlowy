@@ -323,6 +323,10 @@ class _SingleInnerViewItemState extends State<SingleInnerViewItem> {
       return const _DotIconWidget();
     }
 
+    if (widget.view.childViews.isEmpty) {
+      return const SizedBox(width: 16);
+    }
+
     final svg = widget.isExpanded
         ? FlowySvgs.drop_menu_show_m
         : FlowySvgs.drop_menu_hide_m;
