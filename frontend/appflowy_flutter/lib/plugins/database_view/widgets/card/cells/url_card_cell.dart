@@ -15,13 +15,13 @@ class URLCardCellStyle extends CardCellStyle {
 
 class URLCardCell<CustomCardData>
     extends CardCell<CustomCardData, URLCardCellStyle> {
-  final CellControllerBuilder cellControllerBuilder;
-
   const URLCardCell({
+    super.key,
+    super.style,
     required this.cellControllerBuilder,
-    URLCardCellStyle? style,
-    Key? key,
-  }) : super(key: key, style: style);
+  });
+
+  final CellControllerBuilder cellControllerBuilder;
 
   @override
   State<URLCardCell> createState() => _URLCellState();
@@ -32,11 +32,11 @@ class _URLCellState extends State<URLCardCell> {
 
   @override
   void initState() {
+    super.initState();
     final cellController =
         widget.cellControllerBuilder.build() as URLCellController;
     _cellBloc = URLCellBloc(cellController: cellController);
     _cellBloc.add(const URLCellEvent.initial());
-    super.initState();
   }
 
   @override
@@ -47,28 +47,28 @@ class _URLCellState extends State<URLCardCell> {
         buildWhen: (previous, current) => previous.content != current.content,
         builder: (context, state) {
           if (state.content.isEmpty) {
-            return const SizedBox();
-          } else {
-            return Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  vertical: CardSizes.cardCellVPadding,
-                ),
-                child: RichText(
-                  textAlign: TextAlign.left,
-                  text: TextSpan(
-                    text: state.content,
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: widget.style?.fontSize ?? FontSizes.s14,
-                          color: Theme.of(context).colorScheme.primary,
-                          decoration: TextDecoration.underline,
-                        ),
-                  ),
+            return const SizedBox.shrink();
+          }
+
+          return Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: CardSizes.cardCellVPadding,
+              ),
+              child: RichText(
+                textAlign: TextAlign.left,
+                text: TextSpan(
+                  text: state.content,
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontSize: widget.style?.fontSize ?? FontSizes.s14,
+                        color: Theme.of(context).colorScheme.primary,
+                        decoration: TextDecoration.underline,
+                      ),
                 ),
               ),
-            );
-          }
+            ),
+          );
         },
       ),
     );

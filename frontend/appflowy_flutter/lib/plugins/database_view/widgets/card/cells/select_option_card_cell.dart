@@ -19,12 +19,12 @@ class SelectOptionCardCell<CustomCardData>
   final EditableCardNotifier? editableNotifier;
 
   SelectOptionCardCell({
+    super.key,
+    required super.cardData,
     required this.cellControllerBuilder,
-    required CustomCardData? cardData,
     this.renderHook,
     this.editableNotifier,
-    Key? key,
-  }) : super(key: key, cardData: cardData);
+  });
 
   @override
   State<SelectOptionCardCell> createState() => _SelectOptionCellState();
@@ -35,11 +35,11 @@ class _SelectOptionCellState extends State<SelectOptionCardCell> {
 
   @override
   void initState() {
+    super.initState();
     final cellController =
         widget.cellControllerBuilder.build() as SelectOptionCellController;
     _cellBloc = SelectOptionCellBloc(cellController: cellController)
       ..add(const SelectOptionCellEvent.initial());
-    super.initState();
   }
 
   @override
@@ -47,15 +47,15 @@ class _SelectOptionCellState extends State<SelectOptionCardCell> {
     return BlocProvider.value(
       value: _cellBloc,
       child: BlocBuilder<SelectOptionCellBloc, SelectOptionCellState>(
-        buildWhen: (previous, current) {
-          return previous.selectedOptions != current.selectedOptions;
-        },
+        buildWhen: (previous, current) =>
+            previous.selectedOptions != current.selectedOptions,
         builder: (context, state) {
           final Widget? custom = widget.renderHook?.call(
             state.selectedOptions,
             widget.cardData,
             context,
           );
+
           if (custom != null) {
             return custom;
           }

@@ -11,9 +11,9 @@ class CheckboxCardCell extends CardCell {
   final CellControllerBuilder cellControllerBuilder;
 
   const CheckboxCardCell({
+    super.key,
     required this.cellControllerBuilder,
-    Key? key,
-  }) : super(key: key);
+  });
 
   @override
   State<CheckboxCardCell> createState() => _CheckboxCellState();
@@ -24,11 +24,11 @@ class _CheckboxCellState extends State<CheckboxCardCell> {
 
   @override
   void initState() {
+    super.initState();
     final cellController =
         widget.cellControllerBuilder.build() as CheckboxCellController;
     _cellBloc = CheckboxCellBloc(cellController: cellController);
     _cellBloc.add(const CheckboxCellEvent.initial());
-    super.initState();
   }
 
   @override
@@ -39,22 +39,22 @@ class _CheckboxCellState extends State<CheckboxCardCell> {
         buildWhen: (previous, current) =>
             previous.isSelected != current.isSelected,
         builder: (context, state) {
-          final icon = FlowySvg(
-            state.isSelected ? FlowySvgs.check_filled_s : FlowySvgs.uncheck_s,
-            blendMode: BlendMode.dst,
-          );
-
           return Align(
             alignment: Alignment.centerLeft,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 2),
               child: FlowyIconButton(
-                iconPadding: EdgeInsets.zero,
-                icon: icon,
                 width: 20,
+                iconPadding: EdgeInsets.zero,
                 onPressed: () => context
                     .read<CheckboxCellBloc>()
                     .add(const CheckboxCellEvent.select()),
+                icon: FlowySvg(
+                  state.isSelected
+                      ? FlowySvgs.check_filled_s
+                      : FlowySvgs.uncheck_s,
+                  blendMode: BlendMode.dst,
+                ),
               ),
             ),
           );

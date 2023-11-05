@@ -1,6 +1,6 @@
 import 'package:appflowy/plugins/database_view/application/cell/cell_controller_builder.dart';
 import 'package:appflowy/plugins/database_view/widgets/row/cells/text_cell/text_cell_bloc.dart';
-import 'package:flowy_infra_ui/style_widget/text.dart';
+import 'package:flowy_infra_ui/flowy_infra_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../row/cell_builder.dart';
@@ -15,19 +15,24 @@ class TextCardCellStyle extends CardCellStyle {
 
 class TextCardCell<CustomCardData>
     extends CardCell<CustomCardData, TextCardCellStyle> with EditableCell {
+  const TextCardCell({
+    super.key,
+    super.style,
+    required super.cardData,
+    required this.cellControllerBuilder,
+    this.editableNotifier,
+    this.renderHook,
+    this.showEmoji = false,
+    this.emoji,
+  });
+
   @override
   final EditableCardNotifier? editableNotifier;
   final CellControllerBuilder cellControllerBuilder;
   final CellRenderHook<String, CustomCardData>? renderHook;
 
-  const TextCardCell({
-    required this.cellControllerBuilder,
-    required CustomCardData? cardData,
-    this.editableNotifier,
-    this.renderHook,
-    TextCardCellStyle? style,
-    Key? key,
-  }) : super(key: key, style: style, cardData: cardData);
+  final bool showEmoji;
+  final String? emoji;
 
   @override
   State<TextCardCell> createState() => _TextCellState();
@@ -41,6 +46,7 @@ class _TextCellState extends State<TextCardCell> {
 
   @override
   void initState() {
+    super.initState();
     final cellController =
         widget.cellControllerBuilder.build() as TextCellController;
     _cellBloc = TextCellBloc(cellController: cellController)
@@ -62,7 +68,6 @@ class _TextCellState extends State<TextCardCell> {
       }
     });
     _bindEditableNotifier();
-    super.initState();
   }
 
   void _bindEditableNotifier() {
@@ -112,6 +117,7 @@ class _TextCellState extends State<TextCardCell> {
               widget.cardData,
               context,
             );
+
             if (custom != null) {
               return custom;
             }
@@ -119,17 +125,24 @@ class _TextCellState extends State<TextCardCell> {
             if (state.content.isEmpty &&
                 state.enableEdit == false &&
                 focusWhenInit == false) {
-              return const SizedBox();
+              return const SizedBox.shrink();
             }
 
-            //
-            Widget child;
-            if (state.enableEdit || focusWhenInit) {
-              child = _buildTextField();
-            } else {
-              child = _buildText(state);
-            }
-            return Align(alignment: Alignment.centerLeft, child: child);
+            final child = state.enableEdit || focusWhenInit
+                ? _buildTextField()
+                : _buildText(state);
+
+            return Row(
+              children: [
+                if (widget.showEmoji &&
+                    widget.emoji != null &&
+                    widget.emoji!.isNotEmpty) ...[
+                  FlowyText(widget.emoji!, fontSize: 16),
+                  const HSpace(4),
+                ],
+                Expanded(child: child),
+              ],
+            );
           },
         ),
       ),
@@ -151,9 +164,9 @@ class _TextCellState extends State<TextCardCell> {
   double _fontSize() {
     if (widget.style != null) {
       return widget.style!.fontSize;
-    } else {
-      return 14;
     }
+
+    return 14;
   }
 
   Widget _buildText(TextCellState state) {

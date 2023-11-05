@@ -1,6 +1,7 @@
 import 'package:appflowy/generated/locale_keys.g.dart';
 import 'package:appflowy/plugins/database_view/application/row/row_cache.dart';
 import 'package:appflowy/plugins/database_view/widgets/card/card.dart';
+import 'package:appflowy/plugins/database_view/widgets/card/card_bloc.dart';
 import 'package:appflowy/plugins/database_view/widgets/card/card_cell_builder.dart';
 import 'package:appflowy/plugins/database_view/widgets/card/cells/card_cell.dart';
 import 'package:appflowy/plugins/database_view/widgets/card/cells/number_card_cell.dart';
@@ -97,6 +98,13 @@ class _EventCardState extends State<EventCard> {
       renderHook: renderHook,
       onStartEditing: () {},
       onEndEditing: () {},
+      cardBloc: CardBloc(
+        viewId: widget.viewId,
+        groupFieldId: null,
+        isEditing: false,
+        rowMeta: rowInfo.rowMeta,
+        rowCache: widget.rowCache,
+      )..add(const RowCardEvent.initial()),
     );
 
     final decoration = BoxDecoration(

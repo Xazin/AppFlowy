@@ -16,10 +16,11 @@ import 'cells/url_cell/url_cell.dart';
 
 /// Build the cell widget in Grid style.
 class GridCellBuilder {
-  final CellMemCache cellCache;
   GridCellBuilder({
     required this.cellCache,
   });
+
+  final CellMemCache cellCache;
 
   GridCellWidget build(
     DatabaseCellContext cellContext, {
@@ -105,10 +106,7 @@ class BlankCell extends StatelessWidget {
 
 abstract class CellEditable {
   RequestFocusListener get requestFocus;
-
   ValueNotifier<bool> get onCellFocus;
-
-  // ValueNotifier<bool> get onCellEditing;
 }
 
 typedef AccessoryBuilder = List<GridCellAccessoryBuilder> Function(
@@ -184,10 +182,10 @@ abstract class GridEditableTextCell<T extends GridCellWidget>
 
   @override
   void initState() {
+    super.initState();
     widget.shortcutHandlers[CellKeyboardKey.onEnter] =
         () => focusNode.unfocus();
     _listenOnFocusNodeChanged();
-    super.initState();
   }
 
   @override

@@ -14,6 +14,7 @@ class FlowyText extends StatelessWidget {
 
   const FlowyText(
     this.text, {
+    super.key,
     this.overflow = TextOverflow.clip,
     this.fontSize,
     this.fontWeight,
@@ -23,11 +24,11 @@ class FlowyText extends StatelessWidget {
     this.decoration,
     this.selectable = false,
     this.fontFamily,
-    Key? key,
-  }) : super(key: key);
+  });
 
   const FlowyText.regular(
     this.text, {
+    super.key,
     this.fontSize,
     this.overflow,
     this.color,
@@ -36,12 +37,11 @@ class FlowyText extends StatelessWidget {
     this.decoration,
     this.selectable = false,
     this.fontFamily,
-    Key? key,
-  })  : fontWeight = FontWeight.w400,
-        super(key: key);
+  }) : fontWeight = FontWeight.w400;
 
   const FlowyText.medium(
     this.text, {
+    super.key,
     this.fontSize,
     this.overflow,
     this.color,
@@ -50,12 +50,11 @@ class FlowyText extends StatelessWidget {
     this.decoration,
     this.selectable = false,
     this.fontFamily,
-    Key? key,
-  })  : fontWeight = FontWeight.w500,
-        super(key: key);
+  }) : fontWeight = FontWeight.w500;
 
   const FlowyText.semibold(
     this.text, {
+    super.key,
     this.fontSize,
     this.overflow,
     this.color,
@@ -64,9 +63,7 @@ class FlowyText extends StatelessWidget {
     this.decoration,
     this.selectable = false,
     this.fontFamily,
-    Key? key,
-  })  : fontWeight = FontWeight.w600,
-        super(key: key);
+  }) : fontWeight = FontWeight.w600;
 
   @override
   Widget build(BuildContext context) {

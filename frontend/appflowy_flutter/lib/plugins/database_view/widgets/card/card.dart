@@ -47,24 +47,27 @@ class RowCard<CustomCardData> extends StatefulWidget {
 
   final RowCardStyleConfiguration styleConfiguration;
 
+  final CardBloc cardBloc;
+
   const RowCard({
+    super.key,
     required this.rowMeta,
     required this.viewId,
-    this.groupingFieldId,
-    this.groupId,
     required this.isEditing,
     required this.rowCache,
     required this.cellBuilder,
     required this.openCard,
     required this.onStartEditing,
     required this.onEndEditing,
+    required this.cardBloc,
+    this.groupingFieldId,
+    this.groupId,
     this.cardData,
     this.styleConfiguration = const RowCardStyleConfiguration(
       showAccessory: true,
     ),
     this.renderHook,
-    Key? key,
-  }) : super(key: key);
+  });
 
   @override
   State<RowCard<CustomCardData>> createState() =>
@@ -72,25 +75,18 @@ class RowCard<CustomCardData> extends StatefulWidget {
 }
 
 class _RowCardState<T> extends State<RowCard<T>> {
-  late final CardBloc _cardBloc;
+  final PopoverController popoverController = PopoverController();
   late final EditableRowNotifier rowNotifier;
-  late final PopoverController popoverController;
   AccessoryType? accessoryType;
 
   @override
   void initState() {
+    super.initState();
     rowNotifier = EditableRowNotifier(isEditing: widget.isEditing);
-    _cardBloc = CardBloc(
-      viewId: widget.viewId,
-      groupFieldId: widget.groupingFieldId,
-      isEditing: widget.isEditing,
-      rowMeta: widget.rowMeta,
-      rowCache: widget.rowCache,
-    )..add(const RowCardEvent.initial());
-
     rowNotifier.isEditing.addListener(() {
       if (!mounted) return;
-      _cardBloc.add(RowCardEvent.setIsEditing(rowNotifier.isEditing.value));
+      widget.cardBloc
+          .add(RowCardEvent.setIsEditing(rowNotifier.isEditing.value));
 
       if (rowNotifier.isEditing.value) {
         widget.onStartEditing();
@@ -98,15 +94,12 @@ class _RowCardState<T> extends State<RowCard<T>> {
         widget.onEndEditing();
       }
     });
-
-    popoverController = PopoverController();
-    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider.value(
-      value: _cardBloc,
+      value: widget.cardBloc,
       child: BlocBuilder<CardBloc, RowCardState>(
         buildWhen: (previous, current) {
           // Rebuild when:
@@ -137,12 +130,12 @@ class _RowCardState<T> extends State<RowCard<T>> {
               accessoryBuilder: (context) {
                 if (widget.styleConfiguration.showAccessory == false) {
                   return [];
-                } else {
-                  return [
-                    _CardEditOption(rowNotifier: rowNotifier),
-                    CardMoreOption(),
-                  ];
                 }
+
+                return [
+                  _CardEditOption(rowNotifier: rowNotifier),
+                  CardMoreOption(),
+                ];
               },
               openAccessory: _handleOpenAccessory,
               openCard: (context) => widget.openCard(context),
@@ -191,7 +184,7 @@ class _RowCardState<T> extends State<RowCard<T>> {
   @override
   Future<void> dispose() async {
     rowNotifier.dispose();
-    _cardBloc.close();
+    widget.cardBloc.close();
     super.dispose();
   }
 }

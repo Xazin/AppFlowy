@@ -8,23 +8,23 @@ import '../define.dart';
 import 'card_cell.dart';
 
 class NumberCardCellStyle extends CardCellStyle {
-  final double fontSize;
-
   NumberCardCellStyle(this.fontSize);
+
+  final double fontSize;
 }
 
 class NumberCardCell<CustomCardData>
     extends CardCell<CustomCardData, NumberCardCellStyle> {
+  const NumberCardCell({
+    super.key,
+    super.style,
+    super.cardData,
+    required this.cellControllerBuilder,
+    this.renderHook,
+  });
+
   final CellRenderHook<String, CustomCardData>? renderHook;
   final CellControllerBuilder cellControllerBuilder;
-
-  const NumberCardCell({
-    required this.cellControllerBuilder,
-    CustomCardData? cardData,
-    NumberCardCellStyle? style,
-    this.renderHook,
-    Key? key,
-  }) : super(key: key, style: style, cardData: cardData);
 
   @override
   State<NumberCardCell> createState() => _NumberCellState();
@@ -35,12 +35,12 @@ class _NumberCellState extends State<NumberCardCell> {
 
   @override
   void initState() {
+    super.initState();
     final cellController =
         widget.cellControllerBuilder.build() as NumberCellController;
 
     _cellBloc = NumberCellBloc(cellController: cellController)
       ..add(const NumberCellEvent.initial());
-    super.initState();
   }
 
   @override
@@ -52,30 +52,30 @@ class _NumberCellState extends State<NumberCardCell> {
             previous.cellContent != current.cellContent,
         builder: (context, state) {
           if (state.cellContent.isEmpty) {
-            return const SizedBox();
-          } else {
-            final Widget? custom = widget.renderHook?.call(
-              state.cellContent,
-              widget.cardData,
-              context,
-            );
-            if (custom != null) {
-              return custom;
-            }
-
-            return Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  vertical: CardSizes.cardCellVPadding,
-                ),
-                child: FlowyText.medium(
-                  state.cellContent,
-                  fontSize: widget.style?.fontSize ?? 14,
-                ),
-              ),
-            );
+            return const SizedBox.shrink();
           }
+          final Widget? custom = widget.renderHook?.call(
+            state.cellContent,
+            widget.cardData,
+            context,
+          );
+
+          if (custom != null) {
+            return custom;
+          }
+
+          return Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: CardSizes.cardCellVPadding,
+              ),
+              child: FlowyText.medium(
+                state.cellContent,
+                fontSize: widget.style?.fontSize ?? 14,
+              ),
+            ),
+          );
         },
       ),
     );

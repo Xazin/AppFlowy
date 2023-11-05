@@ -12,10 +12,10 @@ class DateCardCell<CustomCardData> extends CardCell {
   final CellRenderHook<dynamic, CustomCardData>? renderHook;
 
   const DateCardCell({
+    super.key,
     required this.cellControllerBuilder,
     this.renderHook,
-    Key? key,
-  }) : super(key: key);
+  });
 
   @override
   State<DateCardCell> createState() => _DateCellState();
@@ -26,12 +26,12 @@ class _DateCellState extends State<DateCardCell> {
 
   @override
   void initState() {
+    super.initState();
     final cellController =
         widget.cellControllerBuilder.build() as DateCellController;
 
     _cellBloc = DateCellBloc(cellController: cellController)
       ..add(const DateCellEvent.initial());
-    super.initState();
   }
 
   @override
@@ -42,31 +42,31 @@ class _DateCellState extends State<DateCardCell> {
         buildWhen: (previous, current) => previous.dateStr != current.dateStr,
         builder: (context, state) {
           if (state.dateStr.isEmpty) {
-            return const SizedBox();
-          } else {
-            final Widget? custom = widget.renderHook?.call(
-              state.data,
-              widget.cardData,
-              context,
-            );
-            if (custom != null) {
-              return custom;
-            }
-
-            return Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  vertical: CardSizes.cardCellVPadding,
-                ),
-                child: FlowyText.regular(
-                  state.dateStr,
-                  fontSize: 13,
-                  color: Theme.of(context).hintColor,
-                ),
-              ),
-            );
+            return const SizedBox.shrink();
           }
+          final Widget? custom = widget.renderHook?.call(
+            state.data,
+            widget.cardData,
+            context,
+          );
+
+          if (custom != null) {
+            return custom;
+          }
+
+          return Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: CardSizes.cardCellVPadding,
+              ),
+              child: FlowyText.regular(
+                state.dateStr,
+                fontSize: 13,
+                color: Theme.of(context).hintColor,
+              ),
+            ),
+          );
         },
       ),
     );

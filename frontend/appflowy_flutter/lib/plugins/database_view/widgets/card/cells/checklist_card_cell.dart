@@ -7,9 +7,12 @@ import '../../row/cells/checklist_cell/checklist_cell_bloc.dart';
 import 'card_cell.dart';
 
 class ChecklistCardCell extends CardCell {
+  const ChecklistCardCell({
+    super.key,
+    required this.cellControllerBuilder,
+  });
+
   final CellControllerBuilder cellControllerBuilder;
-  const ChecklistCardCell({required this.cellControllerBuilder, Key? key})
-      : super(key: key);
 
   @override
   State<ChecklistCardCell> createState() => _ChecklistCellState();
@@ -20,11 +23,11 @@ class _ChecklistCellState extends State<ChecklistCardCell> {
 
   @override
   void initState() {
+    super.initState();
     final cellController =
         widget.cellControllerBuilder.build() as ChecklistCellController;
     _cellBloc = ChecklistCellBloc(cellController: cellController);
     _cellBloc.add(const ChecklistCellEvent.initial());
-    super.initState();
   }
 
   @override
@@ -36,6 +39,7 @@ class _ChecklistCellState extends State<ChecklistCardCell> {
           if (state.tasks.isEmpty) {
             return const SizedBox.shrink();
           }
+
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: ChecklistProgressBar(

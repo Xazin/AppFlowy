@@ -11,10 +11,12 @@ import 'package:appflowy/plugins/database_view/application/row/row_controller.da
 import 'package:appflowy/plugins/database_view/board/presentation/widgets/board_column_header.dart';
 import 'package:appflowy/plugins/database_view/grid/presentation/layout/sizes.dart';
 import 'package:appflowy/plugins/database_view/tar_bar/tab_bar_view.dart';
+import 'package:appflowy/plugins/database_view/widgets/card/card_bloc.dart';
 import 'package:appflowy/plugins/database_view/widgets/row/row_detail.dart';
 import 'package:appflowy_backend/protobuf/flowy-folder2/view.pb.dart';
 import 'package:appflowy_backend/protobuf/flowy-database2/row_entities.pb.dart';
 import 'package:appflowy_board/appflowy_board.dart';
+import 'package:collection/collection.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 import 'package:flowy_infra_ui/flowy_infra_ui_web.dart';
@@ -228,6 +230,11 @@ class _BoardContentState extends State<BoardContent> {
 
   Widget _buildFooter(BuildContext context, AppFlowyGroupData columnData) {
     return AppFlowyGroupFooter(
+      height: 50,
+      margin: config.footerPadding,
+      onAddButtonClick: () => context
+          .read<BoardBloc>()
+          .add(BoardEvent.createBottomRow(columnData.id)),
       icon: SizedBox(
         height: 20,
         width: 20,
@@ -240,13 +247,6 @@ class _BoardContentState extends State<BoardContent> {
         LocaleKeys.board_column_createNewCard.tr(),
         fontSize: 14,
       ),
-      height: 50,
-      margin: config.footerPadding,
-      onAddButtonClick: () {
-        context.read<BoardBloc>().add(
-              BoardEvent.createBottomRow(columnData.id),
-            );
-      },
     );
   }
 
@@ -272,32 +272,50 @@ class _BoardContentState extends State<BoardContent> {
         boardBloc.state.editingRow?.row.id == groupItem.row.id;
 
     final groupItemId = groupItem.row.id + groupData.group.groupId;
-    return AppFlowyGroupCard(
+    return BlocProvider<CardBloc>(
       key: ValueKey(groupItemId),
-      margin: config.cardPadding,
-      decoration: _makeBoxDecoration(context),
-      child: RowCard<String>(
-        rowMeta: rowMeta,
+      create: (context) => CardBloc(
         viewId: viewId,
-        rowCache: rowCache,
-        cardData: groupData.group.groupId,
-        groupingFieldId: groupItem.fieldInfo.id,
-        groupId: groupData.group.groupId,
+        groupFieldId: groupItem.fieldInfo.id,
         isEditing: isEditing,
-        cellBuilder: cellBuilder,
-        renderHook: renderHook,
-        openCard: (context) => _openCard(
-          context: context,
-          viewId: viewId,
-          groupId: groupData.group.groupId,
-          fieldController: fieldController,
-          rowMeta: rowMeta,
-          rowCache: rowCache,
-        ),
-        onStartEditing: () => boardBloc
-            .add(BoardEvent.startEditingRow(groupData.group, groupItem.row)),
-        onEndEditing: () =>
-            boardBloc.add(BoardEvent.endEditingRow(groupItem.row.id)),
+        rowMeta: rowMeta,
+        rowCache: rowCache,
+      )..add(const RowCardEvent.initial()),
+      child: BlocBuilder<CardBloc, RowCardState>(
+        builder: (context, state) {
+          return AppFlowyGroupCard(
+            margin: config.cardPadding,
+            decoration: _makeBoxDecoration(context),
+            child: RowCard<String>(
+              rowMeta: state.cells
+                  .firstWhere((cell) => cell.rowId == rowMeta.id)
+                  .rowMeta,
+              viewId: viewId,
+              rowCache: rowCache,
+              cardData: groupData.group.groupId,
+              groupingFieldId: groupItem.fieldInfo.id,
+              groupId: groupData.group.groupId,
+              isEditing: isEditing,
+              cellBuilder: cellBuilder,
+              renderHook: renderHook,
+              openCard: (context) => _openCard(
+                context: context,
+                viewId: viewId,
+                groupId: groupData.group.groupId,
+                fieldController: fieldController,
+                rowMeta: state.cells
+                    .firstWhere((cell) => cell.rowId == rowMeta.id)
+                    .rowMeta,
+                rowCache: rowCache,
+              ),
+              onStartEditing: () => boardBloc.add(
+                  BoardEvent.startEditingRow(groupData.group, groupItem.row)),
+              onEndEditing: () =>
+                  boardBloc.add(BoardEvent.endEditingRow(groupItem.row.id)),
+              cardBloc: context.read<CardBloc>(),
+            ),
+          );
+        },
       ),
     );
   }

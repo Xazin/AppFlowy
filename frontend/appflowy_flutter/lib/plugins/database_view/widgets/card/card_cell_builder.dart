@@ -36,68 +36,60 @@ class CardCellBuilder<CustomCardData> {
     switch (cellContext.fieldType) {
       case FieldType.Checkbox:
         return CheckboxCardCell(
-          cellControllerBuilder: cellControllerBuilder,
           key: key,
+          cellControllerBuilder: cellControllerBuilder,
         );
       case FieldType.DateTime:
         return DateCardCell<CustomCardData>(
+          key: key,
           renderHook: renderHook?.renderHook[FieldType.DateTime],
           cellControllerBuilder: cellControllerBuilder,
-          key: key,
         );
       case FieldType.LastEditedTime:
-        return TimestampCardCell<CustomCardData>(
-          renderHook: renderHook?.renderHook[FieldType.LastEditedTime],
-          cellControllerBuilder: cellControllerBuilder,
-          key: key,
-        );
       case FieldType.CreatedTime:
         return TimestampCardCell<CustomCardData>(
-          renderHook: renderHook?.renderHook[FieldType.CreatedTime],
-          cellControllerBuilder: cellControllerBuilder,
           key: key,
+          renderHook: renderHook?.renderHook[cellContext.fieldType],
+          cellControllerBuilder: cellControllerBuilder,
         );
       case FieldType.SingleSelect:
-        return SelectOptionCardCell<CustomCardData>(
-          renderHook: renderHook?.renderHook[FieldType.SingleSelect],
-          cellControllerBuilder: cellControllerBuilder,
-          cardData: cardData,
-          key: key,
-        );
       case FieldType.MultiSelect:
         return SelectOptionCardCell<CustomCardData>(
-          renderHook: renderHook?.renderHook[FieldType.MultiSelect],
+          key: key,
+          renderHook: renderHook?.renderHook[cellContext.fieldType],
           cellControllerBuilder: cellControllerBuilder,
           cardData: cardData,
           editableNotifier: cellNotifier,
-          key: key,
         );
+
       case FieldType.Checklist:
         return ChecklistCardCell(
-          cellControllerBuilder: cellControllerBuilder,
           key: key,
+          cellControllerBuilder: cellControllerBuilder,
         );
       case FieldType.Number:
         return NumberCardCell<CustomCardData>(
+          key: key,
           renderHook: renderHook?.renderHook[FieldType.Number],
           style: isStyleOrNull<NumberCardCellStyle>(style),
           cellControllerBuilder: cellControllerBuilder,
-          key: key,
         );
       case FieldType.RichText:
         return TextCardCell<CustomCardData>(
+          key: key,
           renderHook: renderHook?.renderHook[FieldType.RichText],
           cellControllerBuilder: cellControllerBuilder,
           editableNotifier: cellNotifier,
           cardData: cardData,
           style: isStyleOrNull<TextCardCellStyle>(style),
-          key: key,
+          showEmoji: cellContext.fieldInfo.isPrimary,
+          emoji: cellContext.emoji,
         );
       case FieldType.URL:
         return URLCardCell<CustomCardData>(
+          key: key,
           style: isStyleOrNull<URLCardCellStyle>(style),
           cellControllerBuilder: cellControllerBuilder,
-          key: key,
         );
     }
     throw UnimplementedError;

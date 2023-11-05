@@ -12,10 +12,10 @@ class TimestampCardCell<CustomCardData> extends CardCell {
   final CellRenderHook<dynamic, CustomCardData>? renderHook;
 
   const TimestampCardCell({
+    super.key,
     required this.cellControllerBuilder,
     this.renderHook,
-    Key? key,
-  }) : super(key: key);
+  });
 
   @override
   State<TimestampCardCell> createState() => _TimestampCellState();
@@ -26,12 +26,12 @@ class _TimestampCellState extends State<TimestampCardCell> {
 
   @override
   void initState() {
+    super.initState();
     final cellController =
         widget.cellControllerBuilder.build() as TimestampCellController;
 
     _cellBloc = TimestampCellBloc(cellController: cellController)
       ..add(const TimestampCellEvent.initial());
-    super.initState();
   }
 
   @override
@@ -44,11 +44,13 @@ class _TimestampCellState extends State<TimestampCardCell> {
           if (state.dateStr.isEmpty) {
             return const SizedBox.shrink();
           }
+
           final Widget? custom = widget.renderHook?.call(
             state.data,
             widget.cardData,
             context,
           );
+
           if (custom != null) {
             return custom;
           }

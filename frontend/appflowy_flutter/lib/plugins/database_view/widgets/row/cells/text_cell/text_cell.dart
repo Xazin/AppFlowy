@@ -30,19 +30,16 @@ class GridTextCellStyle extends GridCellStyle {
 }
 
 class GridTextCell extends GridCellWidget {
-  final CellControllerBuilder cellControllerBuilder;
-  late final GridTextCellStyle cellStyle;
   GridTextCell({
+    super.key,
     required this.cellControllerBuilder,
     GridCellStyle? style,
-    Key? key,
-  }) : super(key: key) {
-    if (style != null) {
-      cellStyle = (style as GridTextCellStyle);
-    } else {
-      cellStyle = const GridTextCellStyle();
-    }
+  }) {
+    cellStyle = (style as GridTextCellStyle?) ?? const GridTextCellStyle();
   }
+
+  final CellControllerBuilder cellControllerBuilder;
+  late final GridTextCellStyle cellStyle;
 
   @override
   GridEditableTextCell<GridTextCell> createState() => _GridTextCellState();
