@@ -1131,7 +1131,7 @@ extension AppFlowyDatabaseTest on WidgetTester {
 
   /// Should call [tapDatabaseSettingButton] first.
   Future<void> tapViewPropertiesButton() async {
-    final findSettingItem = find.byType(DatabaseSettingListPopover);
+    final findSettingItem = find.byType(DatabaseSettingsList);
     final findLayoutButton = find.byWidgetPredicate(
       (widget) =>
           widget is FlowyText &&
@@ -1148,7 +1148,7 @@ extension AppFlowyDatabaseTest on WidgetTester {
 
   /// Should call [tapDatabaseSettingButton] first.
   Future<void> tapDatabaseLayoutButton() async {
-    final findSettingItem = find.byType(DatabaseSettingListPopover);
+    final findSettingItem = find.byType(DatabaseSettingsList);
     final findLayoutButton = find.byWidgetPredicate(
       (widget) =>
           widget is FlowyText &&
@@ -1164,7 +1164,7 @@ extension AppFlowyDatabaseTest on WidgetTester {
   }
 
   Future<void> tapCalendarLayoutSettingButton() async {
-    final findSettingItem = find.byType(DatabaseSettingListPopover);
+    final findSettingItem = find.byType(DatabaseSettingsList);
     final findLayoutButton = find.byWidgetPredicate(
       (widget) =>
           widget is FlowyText &&

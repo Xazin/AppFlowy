@@ -1,8 +1,11 @@
 import 'package:appflowy/generated/flowy_svgs.g.dart';
 import 'package:appflowy/generated/locale_keys.g.dart';
+import 'package:appflowy/mobile/presentation/presentation.dart';
+import 'package:appflowy/mobile/presentation/widgets/flowy_paginated_bottom_sheet.dart';
 import 'package:appflowy/plugins/database_view/application/database_controller.dart';
 import 'package:appflowy/plugins/database_view/calendar/presentation/toolbar/calendar_layout_setting.dart';
 import 'package:appflowy/plugins/database_view/widgets/group/database_group.dart';
+import 'package:appflowy/util/platform_extension.dart';
 import 'package:appflowy_backend/protobuf/flowy-database2/calendar_entities.pb.dart';
 import 'package:appflowy_backend/protobuf/flowy-database2/setting_entities.pbenum.dart';
 import 'package:appflowy_popover/appflowy_popover.dart';
@@ -47,31 +50,43 @@ class _SettingButtonState extends State<SettingButton> {
         hoverColor: AFThemeExtension.of(context).lightGreyHover,
         padding: GridSize.toolbarSettingButtonInsets,
         radius: Corners.s4Border,
-        onPressed: () => _popoverController.show(),
+        onPressed: PlatformExtension.isMobile
+            ? _showMobileSettings
+            : _popoverController.show,
       ),
       popupBuilder: (BuildContext context) {
-        return DatabaseSettingListPopover(
+        return DatabaseSettingsList(
           databaseController: widget.databaseController,
         );
       },
     );
   }
+
+  void _showMobileSettings() {
+    final page = SheetPage(
+      title: LocaleKeys.settings_title.tr(),
+      body: DatabaseSettingsList(
+        databaseController: widget.databaseController,
+      ),
+    );
+
+    showPaginatedBottomSheet(context, page: page);
+  }
 }
 
-class DatabaseSettingListPopover extends StatefulWidget {
+class DatabaseSettingsList extends StatefulWidget {
+  const DatabaseSettingsList({
+    super.key,
+    required this.databaseController,
+  });
+
   final DatabaseController databaseController;
 
-  const DatabaseSettingListPopover({
-    required this.databaseController,
-    Key? key,
-  }) : super(key: key);
-
   @override
-  State<StatefulWidget> createState() => _DatabaseSettingListPopoverState();
+  State<StatefulWidget> createState() => _DatabaseSettingsListState();
 }
 
-class _DatabaseSettingListPopoverState
-    extends State<DatabaseSettingListPopover> {
+class _DatabaseSettingsListState extends State<DatabaseSettingsList> {
   late final PopoverMutex popoverMutex;
 
   @override
@@ -101,9 +116,7 @@ class _DatabaseSettingListPopoverState
       separatorBuilder: (context, index) =>
           VSpace(GridSize.typeOptionSeparatorHeight),
       physics: StyledScrollPhysics(),
-      itemBuilder: (BuildContext context, int index) {
-        return cells[index];
-      },
+      itemBuilder: (BuildContext context, int index) => cells[index],
     );
   }
 }
@@ -189,28 +202,84 @@ extension DatabaseSettingActionExtension on DatabaseSettingAction {
     };
 
     return AppFlowyPopover(
-      triggerActions: PopoverTriggerFlags.hover | PopoverTriggerFlags.click,
+      triggerActions: PlatformExtension.isMobile
+          ? PopoverTriggerFlags.none
+          : PopoverTriggerFlags.hover | PopoverTriggerFlags.click,
       direction: PopoverDirection.leftWithTopAligned,
       mutex: popoverMutex,
       margin: EdgeInsets.zero,
       offset: const Offset(-14, 0),
-      child: SizedBox(
-        height: GridSize.popoverItemHeight,
-        child: FlowyButton(
-          hoverColor: AFThemeExtension.of(context).lightGreyHover,
-          text: FlowyText.medium(
-            title(),
-            color: AFThemeExtension.of(context).textColor,
-          ),
-          leftIcon: FlowySvg(
-            iconData(),
-            color: Theme.of(context).iconTheme.color,
-          ),
-        ),
-      ),
+      child: PlatformExtension.isMobile
+          ? MobileSettingItem(
+              name: title(),
+              trailing: _trailingFromSetting(
+                context,
+                databaseController.databaseLayout,
+              ),
+              leadingIcon: FlowySvg(
+                iconData(),
+                size: const Size.square(18),
+                color: Theme.of(context).iconTheme.color,
+              ),
+              onTap: _actionFromSetting(context, databaseController),
+            )
+          : SizedBox(
+              height: GridSize.popoverItemHeight,
+              child: FlowyButton(
+                onTap: PlatformExtension.isMobile ? () {} : null,
+                hoverColor: AFThemeExtension.of(context).lightGreyHover,
+                text: FlowyText.medium(
+                  title(),
+                  color: AFThemeExtension.of(context).textColor,
+                ),
+                leftIcon: FlowySvg(
+                  iconData(),
+                  color: Theme.of(context).iconTheme.color,
+                ),
+              ),
+            ),
       popupBuilder: (context) => popover,
     );
   }
+
+  VoidCallback? _actionFromSetting(
+    BuildContext context,
+    DatabaseController databaseController,
+  ) =>
+      switch (this) {
+        DatabaseSettingAction.showLayout => () =>
+            _showLayoutSettings(context, databaseController),
+        _ => null,
+      };
+
+  void _showLayoutSettings(
+    BuildContext context,
+    DatabaseController databaseController,
+  ) =>
+      FlowyBottomSheetController.of(context)!.push(
+        SheetPage(
+          title: 'Select layout',
+          body: DatabaseLayoutList(
+            viewId: databaseController.viewId,
+            currentLayout: databaseController.databaseLayout,
+          ),
+        ),
+      );
+
+  Widget? _trailingFromSetting(BuildContext context, DatabaseLayoutPB layout) =>
+      switch (this) {
+        DatabaseSettingAction.showLayout => Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FlowyText(
+                layout.name,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+              const Icon(Icons.chevron_right),
+            ],
+          ),
+        _ => null,
+      };
 }
 
 /// Returns the list of actions that should be shown for the given database layout.

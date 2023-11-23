@@ -5,13 +5,16 @@ class MobileSettingItem extends StatelessWidget {
   const MobileSettingItem({
     super.key,
     required this.name,
+    this.trailing,
+    this.leadingIcon,
     this.subtitle,
-    required this.trailing,
     this.onTap,
   });
+
   final String name;
+  final Widget? trailing;
+  final Widget? leadingIcon;
   final Widget? subtitle;
-  final Widget trailing;
   final VoidCallback? onTap;
 
   @override
@@ -19,9 +22,17 @@ class MobileSettingItem extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: ListTile(
-        title: FlowyText.medium(
-          name,
-          fontSize: 14.0,
+        title: Row(
+          children: [
+            if (leadingIcon != null) ...[
+              leadingIcon!,
+              const HSpace(8),
+            ],
+            FlowyText.medium(
+              name,
+              fontSize: 14.0,
+            ),
+          ],
         ),
         subtitle: subtitle,
         trailing: trailing,
