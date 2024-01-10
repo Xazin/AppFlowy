@@ -1,19 +1,21 @@
-import 'package:appflowy/workspace/presentation/widgets/date_picker/widgets/date_picker_dialog.dart';
-import 'package:appflowy_backend/protobuf/flowy-database2/date_entities.pbenum.dart';
-import 'package:appflowy_backend/protobuf/flowy-user/date_time.pbenum.dart';
-import 'package:appflowy_popover/appflowy_popover.dart';
-import 'package:calendar_view/calendar_view.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import 'package:appflowy/generated/flowy_svgs.g.dart';
+import 'package:appflowy/mobile/presentation/bottom_sheet/bottom_sheet.dart';
+import 'package:appflowy/plugins/database/widgets/row/cells/date_cell/mobile_date_editor.dart';
 import 'package:appflowy/plugins/document/presentation/editor_plugins/mention/mention_block.dart';
 import 'package:appflowy/plugins/document/presentation/more/cubit/document_appearance_cubit.dart';
 import 'package:appflowy/user/application/reminder/reminder_bloc.dart';
 import 'package:appflowy/workspace/application/settings/appearance/appearance_cubit.dart';
 import 'package:appflowy/workspace/application/settings/date_time/date_format_ext.dart';
+import 'package:appflowy/workspace/presentation/widgets/date_picker/widgets/date_picker_dialog.dart';
+import 'package:appflowy_backend/protobuf/flowy-database2/date_entities.pbenum.dart';
+import 'package:appflowy_backend/protobuf/flowy-user/date_time.pbenum.dart';
 import 'package:appflowy_editor/appflowy_editor.dart';
+import 'package:appflowy_popover/appflowy_popover.dart';
+import 'package:calendar_view/calendar_view.dart';
 import 'package:collection/collection.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flowy_infra_ui/flowy_infra_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -146,12 +148,21 @@ class _MentionDateBlockState extends State<MentionDateBlock> {
             );
 
             return GestureDetector(
-              onTapDown: editorState.editable
-                  ? (details) => DatePickerMenu(
-                        context: context,
-                        editorState: context.read<EditorState>(),
-                      ).show(details.globalPosition, options: options)
-                  : null,
+              onTapDown: (details) {
+                if (editorState.editable) {
+                  if (PlatformExtension.isMobile) {
+                    showMobileBottomSheet(
+                      context,
+                      builder: (_) => const MobileDatePicker(),
+                    );
+                  } else {
+                    DatePickerMenu(
+                      context: context,
+                      editorState: context.read<EditorState>(),
+                    ).show(details.globalPosition, options: options);
+                  }
+                }
+              },
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: MouseRegion(

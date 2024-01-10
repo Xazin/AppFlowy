@@ -1,7 +1,8 @@
+import 'package:flutter/material.dart';
+
 import 'package:appflowy/plugins/database/application/cell/cell_controller_builder.dart';
 import 'package:appflowy/workspace/presentation/widgets/date_picker/appflowy_date_picker.dart';
 import 'package:appflowy_popover/appflowy_popover.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'date_cell_editor_bloc.dart';
@@ -43,6 +44,8 @@ class _DateCellEditor extends State<DateCellEditor> {
             onIncludeTimeChanged: (value) =>
                 bloc.add(DateCellEditorEvent.setIncludeTime(!value)),
             isRange: state.isRange,
+            startDay: state.isRange ? state.startDay : null,
+            endDay: state.isRange ? state.endDay : null,
             onIsRangeChanged: (value) =>
                 bloc.add(DateCellEditorEvent.setIsRange(!value)),
             dateFormat: state.dateTypeOptionPB.dateFormat,

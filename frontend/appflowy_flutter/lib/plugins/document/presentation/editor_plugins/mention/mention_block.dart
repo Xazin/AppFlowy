@@ -1,7 +1,8 @@
+import 'package:flutter/material.dart';
+
 import 'package:appflowy/plugins/document/presentation/editor_plugins/mention/mention_date_block.dart';
 import 'package:appflowy/plugins/document/presentation/editor_plugins/mention/mention_page_block.dart';
 import 'package:appflowy_editor/appflowy_editor.dart';
-import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 enum MentionType {
@@ -21,6 +22,24 @@ enum MentionType {
         throw UnimplementedError();
     }
   }
+}
+
+Node dateMentionNode() {
+  return paragraphNode(
+    delta: Delta(
+      operations: [
+        TextInsert(
+          '\$',
+          attributes: {
+            MentionBlockKeys.mention: {
+              MentionBlockKeys.type: MentionType.date.name,
+              MentionBlockKeys.date: DateTime.now().toIso8601String(),
+            },
+          },
+        ),
+      ],
+    ),
+  );
 }
 
 class MentionBlockKeys {
