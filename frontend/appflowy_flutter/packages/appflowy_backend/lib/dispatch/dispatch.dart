@@ -26,12 +26,16 @@ import 'error.dart';
 import '../protobuf/flowy-date/entities.pb.dart';
 import '../protobuf/flowy-date/event_map.pb.dart';
 
+import '../protobuf/flowy-search/entities.pb.dart';
+import '../protobuf/flowy-search/event_map.pb.dart';
+
 part 'dart_event/flowy-folder/dart_event.dart';
 part 'dart_event/flowy-user/dart_event.dart';
 part 'dart_event/flowy-database2/dart_event.dart';
 part 'dart_event/flowy-document/dart_event.dart';
 part 'dart_event/flowy-config/dart_event.dart';
 part 'dart_event/flowy-date/dart_event.dart';
+part 'dart_event/flowy-search/dart_event.dart';
 
 enum FFIException {
   RequestIsEmpty,
