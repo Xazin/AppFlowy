@@ -1,5 +1,6 @@
 #![allow(unused_doc_comments)]
 
+use flowy_search::services::manager::SearchManager;
 use flowy_storage::ObjectStorageService;
 use std::sync::Arc;
 
@@ -53,6 +54,7 @@ pub struct AppFlowyCore {
   pub task_dispatcher: Arc<RwLock<TaskDispatcher>>,
   pub store_preference: Arc<StorePreferences>,
   pub search_indexer: Arc<SearchIndexer>,
+  pub search_manager: Arc<SearchManager>,
 }
 
 impl AppFlowyCore {
@@ -114,6 +116,7 @@ impl AppFlowyCore {
       document_manager,
       collab_builder,
       search_indexer,
+      search_manager,
     ) = async {
       /// The shared collab builder is used to build the [Collab] instance. The plugins will be loaded
       /// on demand based on the [CollabPluginConfig].
@@ -175,6 +178,8 @@ impl AppFlowyCore {
       )
       .await;
 
+      let search_manager = Arc::new(SearchManager::new());
+
       (
         user_manager,
         folder_manager,
@@ -183,6 +188,7 @@ impl AppFlowyCore {
         document_manager,
         collab_builder,
         search_indexer,
+        search_manager,
       )
     }
     .await;
@@ -217,6 +223,7 @@ impl AppFlowyCore {
         Arc::downgrade(&database_manager),
         Arc::downgrade(&user_manager),
         Arc::downgrade(&document_manager),
+        Arc::downgrade(&search_manager),
       ),
     ));
 
@@ -231,6 +238,7 @@ impl AppFlowyCore {
       task_dispatcher,
       store_preference,
       search_indexer,
+      search_manager,
     }
   }
 
