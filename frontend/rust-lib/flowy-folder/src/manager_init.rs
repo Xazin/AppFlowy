@@ -1,6 +1,7 @@
 use std::sync::{Arc, Weak};
 
 use collab_folder::{Folder, FolderNotify, UserId};
+use flowy_search::services::indexer::IndexManager;
 use tracing::{event, Level};
 
 use collab_integrate::CollabKVDB;

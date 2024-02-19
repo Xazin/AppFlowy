@@ -7,6 +7,7 @@ use collab_entity::CollabType;
 use collab_folder::{
   Folder, FolderData, Section, SectionItem, TrashInfo, View, ViewLayout, ViewUpdate, Workspace,
 };
+use flowy_search::folder::indexer::FolderIndexManager;
 use parking_lot::{Mutex, RwLock};
 use tracing::{error, event, info, instrument, Level};
 
@@ -29,7 +30,6 @@ use crate::manager_observer::{
 use crate::notification::{
   send_notification, send_workspace_setting_notification, FolderNotification,
 };
-use crate::search::{FolderIndexStorage, FolderIndexer};
 use crate::share::ImportParams;
 use crate::util::{
   folder_not_init_error, insert_parent_child_views, workspace_data_not_sync_error,
@@ -56,7 +56,7 @@ pub struct FolderManager {
   pub(crate) user: Arc<dyn FolderUser>,
   pub(crate) operation_handlers: FolderOperationHandlers,
   pub cloud_service: Arc<dyn FolderCloudService>,
-  pub(crate) indexer: FolderIndexer,
+  pub(crate) indexer: FolderIndexManager,
 }
 
 impl FolderManager {
@@ -65,10 +65,9 @@ impl FolderManager {
     collab_builder: Arc<AppFlowyCollabBuilder>,
     operation_handlers: FolderOperationHandlers,
     cloud_service: Arc<dyn FolderCloudService>,
-    index_storage: impl FolderIndexStorage + 'static,
+    indexer: FolderIndexManager,
   ) -> FlowyResult<Self> {
     let mutex_folder = Arc::new(MutexFolder::default());
-    let indexer = FolderIndexer::new(index_storage);
     let manager = Self {
       user,
       mutex_folder,
@@ -1044,9 +1043,9 @@ impl FolderManager {
 
   #[tracing::instrument(level = "trace", skip(self), err)]
   pub fn search(&self, s: &str, limit: Option<i64>) -> FlowyResult<Vec<SearchDataPB>> {
-    let results = self.indexer.search(s, limit)?;
-    let results = results.into_iter().map(SearchDataPB::from).collect();
-    Ok(results)
+    // let results = self.indexer.search(s, limit)?;
+    // let results = results.into_iter().map(SearchDataPB::from).collect();
+    Ok(vec![])
   }
 }
 
