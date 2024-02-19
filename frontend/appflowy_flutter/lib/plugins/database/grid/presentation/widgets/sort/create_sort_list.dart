@@ -4,7 +4,7 @@ import 'package:appflowy/plugins/database/application/field/field_controller.dar
 import 'package:appflowy/plugins/database/application/field/field_info.dart';
 import 'package:appflowy/plugins/database/grid/application/sort/sort_create_bloc.dart';
 import 'package:appflowy/plugins/database/grid/presentation/layout/sizes.dart';
-import 'package:appflowy/plugins/database/grid/presentation/widgets/header/field_type_extension.dart';
+import 'package:appflowy/util/field_type_extension.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flowy_infra/theme_extension.dart';
 import 'package:flowy_infra_ui/style_widget/button.dart';
@@ -16,18 +16,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class GridCreateSortList extends StatefulWidget {
-  final String viewId;
-  final FieldController fieldController;
-  final VoidCallback onClosed;
-  final VoidCallback? onCreateSort;
-
   const GridCreateSortList({
+    super.key,
     required this.viewId,
     required this.fieldController,
     required this.onClosed,
     this.onCreateSort,
-    super.key,
   });
+
+  final String viewId;
+  final FieldController fieldController;
+  final VoidCallback onClosed;
+  final VoidCallback? onCreateSort;
 
   @override
   State<StatefulWidget> createState() => _GridCreateSortListState();
@@ -97,7 +97,7 @@ class _GridCreateSortListState extends State<GridCreateSortList> {
   }
 
   @override
-  Future<void> dispose() async {
+  void dispose() {
     editBloc.close();
     super.dispose();
   }
@@ -147,13 +147,14 @@ class _SortTextFieldDelegate extends SliverPersistentHeaderDelegate {
 }
 
 class GridSortPropertyCell extends StatelessWidget {
-  final FieldInfo fieldInfo;
-  final Function(FieldInfo) onTap;
   const GridSortPropertyCell({
+    super.key,
     required this.fieldInfo,
     required this.onTap,
-    super.key,
   });
+
+  final FieldInfo fieldInfo;
+  final Function(FieldInfo) onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -165,7 +166,7 @@ class GridSortPropertyCell extends StatelessWidget {
       ),
       onTap: () => onTap(fieldInfo),
       leftIcon: FlowySvg(
-        fieldInfo.fieldType.icon(),
+        fieldInfo.fieldType.svgData,
         color: Theme.of(context).iconTheme.color,
       ),
     );

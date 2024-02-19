@@ -1,32 +1,39 @@
+import 'dart:async';
+
 import 'package:appflowy/plugins/database/application/field/field_controller.dart';
 import 'package:appflowy/plugins/database/application/field/field_info.dart';
 import 'package:appflowy/plugins/database/application/sort/sort_service.dart';
 import 'package:appflowy/plugins/database/grid/presentation/widgets/sort/sort_info.dart';
-import 'package:appflowy_backend/protobuf/flowy-database2/sort_entities.pbenum.dart';
 import 'package:appflowy_backend/log.dart';
+import 'package:appflowy_backend/protobuf/flowy-database2/sort_entities.pbenum.dart';
 import 'package:appflowy_backend/protobuf/flowy-database2/sort_entities.pbserver.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'dart:async';
+
 import 'util.dart';
 
 part 'sort_editor_bloc.freezed.dart';
 
 class SortEditorBloc extends Bloc<SortEditorEvent, SortEditorState> {
-  final String viewId;
-  final SortBackendService _sortBackendSvc;
-  final FieldController fieldController;
-  void Function(List<FieldInfo>)? _onFieldFn;
   SortEditorBloc({
     required this.viewId,
     required this.fieldController,
     required List<SortInfo> sortInfos,
   })  : _sortBackendSvc = SortBackendService(viewId: viewId),
         super(SortEditorState.initial(sortInfos, fieldController.fieldInfos)) {
+    _dispatch();
+  }
+
+  final String viewId;
+  final SortBackendService _sortBackendSvc;
+  final FieldController fieldController;
+  void Function(List<FieldInfo>)? _onFieldFn;
+
+  void _dispatch() {
     on<SortEditorEvent>(
       (event, emit) async {
-        event.when(
-          initial: () async {
+        await event.when(
+          initial: () {
             _startListening();
           },
           didReceiveFields: (List<FieldInfo> fields) {
@@ -61,6 +68,23 @@ class SortEditorBloc extends Bloc<SortEditorEvent, SortEditorState> {
               fieldId: sortInfo.fieldInfo.id,
               sortId: sortInfo.sortId,
               fieldType: sortInfo.fieldInfo.fieldType,
+            );
+            result.fold((l) => null, (err) => Log.error(err));
+          },
+          reorderSort: (fromIndex, toIndex) async {
+            if (fromIndex < toIndex) {
+              toIndex--;
+            }
+
+            final fromId = state.sortInfos[fromIndex].sortId;
+            final toId = state.sortInfos[toIndex].sortId;
+
+            final newSorts = [...state.sortInfos];
+            newSorts.insert(toIndex, newSorts.removeAt(fromIndex));
+            emit(state.copyWith(sortInfos: newSorts));
+            final result = await _sortBackendSvc.reorderSort(
+              fromSortId: fromId,
+              toSortId: toId,
             );
             result.fold((l) => null, (err) => Log.error(err));
           },
@@ -106,6 +130,8 @@ class SortEditorEvent with _$SortEditorEvent {
   ) = _SetCondition;
   const factory SortEditorEvent.deleteSort(SortInfo sortInfo) = _DeleteSort;
   const factory SortEditorEvent.deleteAllSorts() = _DeleteAllSorts;
+  const factory SortEditorEvent.reorderSort(int oldIndex, int newIndex) =
+      _ReorderSort;
 }
 
 @freezed

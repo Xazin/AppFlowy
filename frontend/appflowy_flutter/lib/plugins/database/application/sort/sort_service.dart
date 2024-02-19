@@ -8,9 +8,9 @@ import 'package:appflowy_backend/protobuf/flowy-database2/setting_entities.pb.da
 import 'package:appflowy_backend/protobuf/flowy-database2/sort_entities.pb.dart';
 
 class SortBackendService {
-  final String viewId;
-
   SortBackendService({required this.viewId});
+
+  final String viewId;
 
   Future<Either<List<SortPB>, FlowyError>> getAllSorts() {
     final payload = DatabaseViewIdPB()..value = viewId;
@@ -75,16 +75,28 @@ class SortBackendService {
     });
   }
 
+  Future<Either<Unit, FlowyError>> reorderSort({
+    required String fromSortId,
+    required String toSortId,
+  }) {
+    final payload = DatabaseSettingChangesetPB()
+      ..viewId = viewId
+      ..reorderSort = (ReorderSortPayloadPB()
+        ..viewId = viewId
+        ..fromSortId = fromSortId
+        ..toSortId = toSortId);
+
+    return DatabaseEventUpdateDatabaseSetting(payload).send();
+  }
+
   Future<Either<Unit, FlowyError>> deleteSort({
     required String fieldId,
     required String sortId,
     required FieldType fieldType,
   }) {
     final deleteSortPayload = DeleteSortPayloadPB.create()
-      ..fieldId = fieldId
       ..sortId = sortId
-      ..viewId = viewId
-      ..fieldType = fieldType;
+      ..viewId = viewId;
 
     final payload = DatabaseSettingChangesetPB.create()
       ..viewId = viewId

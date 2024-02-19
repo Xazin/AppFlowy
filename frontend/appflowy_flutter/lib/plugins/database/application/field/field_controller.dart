@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:appflowy/plugins/database/application/database_view_service.dart';
 import 'package:appflowy/plugins/database/application/field_settings/field_settings_listener.dart';
 import 'package:appflowy/plugins/database/application/field_settings/field_settings_service.dart';
@@ -79,6 +81,24 @@ typedef OnReceiveSorts = void Function(List<SortInfo>);
 typedef OnReceiveFieldSettings = void Function(List<FieldInfo>);
 
 class FieldController {
+  FieldController({required this.viewId})
+      : _fieldListener = FieldsListener(viewId: viewId),
+        _settingListener = DatabaseSettingListener(viewId: viewId),
+        _filterBackendSvc = FilterBackendService(viewId: viewId),
+        _filtersListener = FiltersListener(viewId: viewId),
+        _databaseViewBackendSvc = DatabaseViewBackendService(viewId: viewId),
+        _sortBackendSvc = SortBackendService(viewId: viewId),
+        _sortsListener = SortsListener(viewId: viewId),
+        _fieldSettingsListener = FieldSettingsListener(viewId: viewId),
+        _fieldSettingsBackendSvc = FieldSettingsBackendService(viewId: viewId) {
+    // Start listeners
+    _listenOnFieldChanges();
+    _listenOnSettingChanges();
+    _listenOnFilterChanges();
+    _listenOnSortChanged();
+    _listenOnFieldSettingsChanged();
+  }
+
   final String viewId;
 
   // Listeners
@@ -144,24 +164,6 @@ class FieldController {
   SortInfo? getSortByFieldId(String fieldId) {
     return _sortNotifier?.sorts
         .firstWhereOrNull((element) => element.fieldId == fieldId);
-  }
-
-  FieldController({required this.viewId})
-      : _fieldListener = FieldsListener(viewId: viewId),
-        _settingListener = DatabaseSettingListener(viewId: viewId),
-        _filterBackendSvc = FilterBackendService(viewId: viewId),
-        _filtersListener = FiltersListener(viewId: viewId),
-        _databaseViewBackendSvc = DatabaseViewBackendService(viewId: viewId),
-        _sortBackendSvc = SortBackendService(viewId: viewId),
-        _sortsListener = SortsListener(viewId: viewId),
-        _fieldSettingsListener = FieldSettingsListener(viewId: viewId),
-        _fieldSettingsBackendSvc = FieldSettingsBackendService(viewId: viewId) {
-    // Start listeners
-    _listenOnFieldChanges();
-    _listenOnSettingChanges();
-    _listenOnFilterChanges();
-    _listenOnSortChanged();
-    _listenOnFieldSettingsChanged();
   }
 
   /// Listen for filter changes in the backend.
@@ -282,16 +284,19 @@ class FieldController {
     ) {
       for (final newSortPB in changeset.insertSorts) {
         final sortIndex = newSortInfos
-            .indexWhere((element) => element.sortId == newSortPB.id);
+            .indexWhere((element) => element.sortId == newSortPB.sort.id);
         if (sortIndex == -1) {
           final fieldInfo = _findFieldInfo(
             fieldInfos: fieldInfos,
-            fieldId: newSortPB.fieldId,
-            fieldType: newSortPB.fieldType,
+            fieldId: newSortPB.sort.fieldId,
+            fieldType: newSortPB.sort.fieldType,
           );
 
           if (fieldInfo != null) {
-            newSortInfos.add(SortInfo(sortPB: newSortPB, fieldInfo: fieldInfo));
+            newSortInfos.insert(
+              newSortPB.index,
+              SortInfo(sortPB: newSortPB.sort, fieldInfo: fieldInfo),
+            );
           }
         }
       }
@@ -330,6 +335,32 @@ class FieldController {
       }
     }
 
+    void updateFieldInfos(
+      List<SortInfo> newSortInfos,
+      SortChangesetNotificationPB changeset,
+    ) {
+      final changedFieldIds = HashSet<String>.from([
+        ...changeset.insertSorts.map((sort) => sort.sort.fieldId),
+        ...changeset.updateSorts.map((sort) => sort.fieldId),
+        ...changeset.deleteSorts.map((sort) => sort.fieldId),
+      ]);
+
+      final newFieldInfos = [...fieldInfos];
+
+      for (final fieldId in changedFieldIds) {
+        final index =
+            newFieldInfos.indexWhere((fieldInfo) => fieldInfo.id == fieldId);
+        if (index == -1) {
+          continue;
+        }
+        newFieldInfos[index] = newFieldInfos[index].copyWith(
+          hasSort: newSortInfos.any((sort) => sort.fieldId == fieldId),
+        );
+      }
+
+      _fieldNotifier.fieldInfos = newFieldInfos;
+    }
+
     _sortsListener.start(
       onSortChanged: (result) {
         if (_isDisposed) {
@@ -343,6 +374,7 @@ class FieldController {
             updateSortFromChangeset(newSortInfos, changeset);
 
             _sortNotifier?.sorts = newSortInfos;
+            updateFieldInfos(newSortInfos, changeset);
           },
           (err) => Log.error(err),
         );
@@ -402,7 +434,7 @@ class FieldController {
         for (final fieldOrder in deletedFields) fieldOrder.fieldId: fieldOrder,
       };
 
-      newFields.retainWhere((field) => (deletedFieldMap[field.id] == null));
+      newFields.retainWhere((field) => deletedFieldMap[field.id] == null);
       return newFields;
     }
 
@@ -784,9 +816,10 @@ class FieldController {
 }
 
 class RowCacheDependenciesImpl extends RowFieldsDelegate with RowLifeCycle {
+  RowCacheDependenciesImpl(FieldController cache) : _fieldController = cache;
+
   final FieldController _fieldController;
   OnReceiveFields? _onFieldFn;
-  RowCacheDependenciesImpl(FieldController cache) : _fieldController = cache;
 
   @override
   UnmodifiableListView<FieldInfo> get fieldInfos =>

@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:appflowy/plugins/document/application/doc_service.dart';
 import 'package:appflowy/plugins/document/application/document_data_pb_extension.dart';
 import 'package:appflowy/plugins/document/application/editor_transaction_adapter.dart';
@@ -22,7 +24,6 @@ import 'package:appflowy_editor/appflowy_editor.dart'
         Position,
         paragraphNode;
 import 'package:dartz/dartz.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
@@ -175,7 +176,7 @@ class DocumentBloc extends Bloc<DocumentEvent, DocumentState> {
       await _transactionAdapter.apply(event.$2, editorState);
 
       // check if the document is empty.
-      applyRules();
+      await applyRules();
 
       if (!isClosed) {
         // ignore: invalid_use_of_visible_for_testing_member
@@ -196,8 +197,10 @@ class DocumentBloc extends Bloc<DocumentEvent, DocumentState> {
   }
 
   Future<void> applyRules() async {
-    ensureAtLeastOneParagraphExists();
-    ensureLastNodeIsEditable();
+    await Future.wait([
+      ensureAtLeastOneParagraphExists(),
+      ensureLastNodeIsEditable(),
+    ]);
   }
 
   Future<void> ensureLastNodeIsEditable() async {
@@ -225,7 +228,7 @@ class DocumentBloc extends Bloc<DocumentEvent, DocumentState> {
       final transaction = editorState.transaction;
       transaction.insertNode([0], paragraphNode());
       transaction.afterSelection = Selection.collapsed(
-        Position(path: [0], offset: 0),
+        Position(path: [0]),
       );
       await editorState.apply(transaction);
     }
@@ -277,10 +280,6 @@ class DocumentState with _$DocumentState {
   factory DocumentState.initial() => const DocumentState(
         isDeleted: false,
         forceClose: false,
-        isDocumentEmpty: null,
-        userProfilePB: null,
-        editorState: null,
-        error: null,
         isLoading: true,
         isSyncing: false,
       );

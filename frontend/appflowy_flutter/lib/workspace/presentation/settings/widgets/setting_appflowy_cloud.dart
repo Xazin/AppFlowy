@@ -9,7 +9,7 @@ import 'package:appflowy_backend/dispatch/dispatch.dart';
 import 'package:appflowy_backend/log.dart';
 import 'package:appflowy_backend/protobuf/flowy-error/errors.pb.dart';
 import 'package:appflowy_backend/protobuf/flowy-user/user_setting.pb.dart';
-import 'package:dartz/dartz.dart' show Either, Some;
+import 'package:dartz/dartz.dart' show Either;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flowy_infra/size.dart';
 import 'package:flowy_infra_ui/flowy_infra_ui.dart';
@@ -20,15 +20,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AppFlowyCloudViewSetting extends StatelessWidget {
-  final String serverURL;
-  final AuthenticatorType authenticatorType;
-  final VoidCallback restartAppFlowy;
   const AppFlowyCloudViewSetting({
-    required this.restartAppFlowy,
     super.key,
     this.serverURL = kAppflowyCloudUrl,
     this.authenticatorType = AuthenticatorType.appflowyCloud,
+    required this.restartAppFlowy,
   });
+
+  final String serverURL;
+  final AuthenticatorType authenticatorType;
+  final VoidCallback restartAppFlowy;
 
   @override
   Widget build(BuildContext context) {
@@ -57,31 +58,39 @@ class AppFlowyCloudViewSetting extends StatelessWidget {
     return BlocProvider(
       create: (context) => AppFlowyCloudSettingBloc(setting)
         ..add(const AppFlowyCloudSettingEvent.initial()),
-      child: Column(
-        children: [
-          const AppFlowyCloudEnableSync(),
-          const VSpace(12),
-          RestartButton(
-            onClick: () async {
-              NavigatorAlertDialog(
-                title: LocaleKeys.settings_menu_restartAppTip.tr(),
-                confirm: () async {
-                  await setAppFlowyCloudUrl(Some(serverURL));
-                  await setAuthenticatorType(authenticatorType);
-                  restartAppFlowy();
+      child: BlocBuilder<AppFlowyCloudSettingBloc, AppFlowyCloudSettingState>(
+        builder: (context, state) {
+          return Column(
+            children: [
+              const AppFlowyCloudEnableSync(),
+              const VSpace(12),
+              RestartButton(
+                onClick: () {
+                  NavigatorAlertDialog(
+                    title: LocaleKeys.settings_menu_restartAppTip.tr(),
+                    confirm: () async {
+                      await useAppFlowyBetaCloudWithURL(
+                        serverURL,
+                        authenticatorType,
+                      );
+                      restartAppFlowy();
+                    },
+                  ).show(context);
                 },
-              ).show(context);
-            },
-          ),
-        ],
+                showRestartHint: state.showRestartHint,
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 }
 
 class CustomAppFlowyCloudView extends StatelessWidget {
-  final VoidCallback restartAppFlowy;
   const CustomAppFlowyCloudView({required this.restartAppFlowy, super.key});
+
+  final VoidCallback restartAppFlowy;
 
   @override
   Widget build(BuildContext context) {
@@ -139,11 +148,9 @@ class CustomAppFlowyCloudView extends StatelessWidget {
 }
 
 class AppFlowyCloudURLs extends StatelessWidget {
+  const AppFlowyCloudURLs({super.key, required this.restartAppFlowy});
+
   final VoidCallback restartAppFlowy;
-  const AppFlowyCloudURLs({
-    required this.restartAppFlowy,
-    super.key,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -153,7 +160,6 @@ class AppFlowyCloudURLs extends StatelessWidget {
       child: BlocListener<AppFlowyCloudURLsBloc, AppFlowyCloudURLsState>(
         listener: (context, state) async {
           if (state.restartApp) {
-            await setAuthenticatorType(AuthenticatorType.appflowyCloudSelfHost);
             restartAppFlowy();
           }
         },
@@ -176,7 +182,7 @@ class AppFlowyCloudURLs extends StatelessWidget {
                 ),
                 const VSpace(8),
                 RestartButton(
-                  onClick: () async {
+                  onClick: () {
                     NavigatorAlertDialog(
                       title: LocaleKeys.settings_menu_restartAppTip.tr(),
                       confirm: () {
@@ -186,6 +192,7 @@ class AppFlowyCloudURLs extends StatelessWidget {
                       },
                     ).show(context);
                   },
+                  showRestartHint: state.showRestartHint,
                 ),
               ],
             );
@@ -197,9 +204,10 @@ class AppFlowyCloudURLs extends StatelessWidget {
 }
 
 class AppFlowySelfhostTip extends StatelessWidget {
+  const AppFlowySelfhostTip({super.key});
+
   final url =
       "https://docs.appflowy.io/docs/guides/appflowy/self-hosting-appflowy#build-appflowy-with-a-self-hosted-server";
-  const AppFlowySelfhostTip({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -243,19 +251,18 @@ class AppFlowySelfhostTip extends StatelessWidget {
 
 @visibleForTesting
 class CloudURLInput extends StatefulWidget {
-  final String title;
-  final String url;
-  final String hint;
-
-  final Function(String) onChanged;
-
   const CloudURLInput({
+    super.key,
     required this.title,
     required this.url,
     required this.hint,
     required this.onChanged,
-    super.key,
   });
+
+  final String title;
+  final String url;
+  final String hint;
+  final Function(String) onChanged;
 
   @override
   CloudURLInputState createState() => CloudURLInputState();
@@ -268,6 +275,12 @@ class CloudURLInputState extends State<CloudURLInput> {
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.url);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -298,12 +311,6 @@ class CloudURLInputState extends State<CloudURLInput> {
       ),
       onChanged: widget.onChanged,
     );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 }
 

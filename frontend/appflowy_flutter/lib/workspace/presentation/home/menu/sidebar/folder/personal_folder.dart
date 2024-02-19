@@ -1,4 +1,3 @@
-import 'package:appflowy/core/raw_keyboard_extension.dart';
 import 'package:appflowy/generated/flowy_svgs.g.dart';
 import 'package:appflowy/generated/locale_keys.g.dart';
 import 'package:appflowy/workspace/application/menu/menu_bloc.dart';
@@ -53,7 +52,7 @@ class PersonalFolder extends StatelessWidget {
                     leftPadding: 16,
                     isFeedback: false,
                     onSelected: (view) {
-                      if (RawKeyboard.instance.isControlPressed) {
+                      if (HardwareKeyboard.instance.isControlPressed) {
                         context.read<TabsBloc>().openTab(view);
                       }
 
@@ -96,7 +95,6 @@ class _PersonalFolderHeaderState extends State<PersonalFolderHeader> {
       onEnter: (event) => setState(() => onHover = true),
       onExit: (event) => setState(() => onHover = false),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           FlowyTextButton(
             LocaleKeys.sideBar_personal.tr(),

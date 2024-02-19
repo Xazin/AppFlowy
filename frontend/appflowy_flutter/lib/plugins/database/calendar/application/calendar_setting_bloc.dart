@@ -12,18 +12,27 @@ typedef DayOfWeek = int;
 
 class CalendarSettingBloc
     extends Bloc<CalendarSettingEvent, CalendarSettingState> {
-  final DatabaseController _databaseController;
-  final DatabaseLayoutSettingListener _listener;
-
-  CalendarSettingBloc({
-    required DatabaseController databaseController,
-  })  : _databaseController = databaseController,
+  CalendarSettingBloc({required DatabaseController databaseController})
+      : _databaseController = databaseController,
         _listener = DatabaseLayoutSettingListener(databaseController.viewId),
         super(
           CalendarSettingState.initial(
             databaseController.databaseLayoutSetting?.calendar,
           ),
         ) {
+    _dispatch();
+  }
+
+  final DatabaseController _databaseController;
+  final DatabaseLayoutSettingListener _listener;
+
+  @override
+  Future<void> close() async {
+    await _listener.stop();
+    return super.close();
+  }
+
+  void _dispatch() {
     on<CalendarSettingEvent>((event, emit) {
       event.when(
         initial: () {
@@ -104,12 +113,6 @@ class CalendarSettingBloc
         );
       },
     );
-  }
-
-  @override
-  Future<void> close() async {
-    await _listener.stop();
-    return super.close();
   }
 }
 

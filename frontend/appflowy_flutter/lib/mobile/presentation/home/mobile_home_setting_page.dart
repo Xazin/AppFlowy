@@ -1,6 +1,7 @@
 import 'package:appflowy/env/cloud_env.dart';
 import 'package:appflowy/env/env.dart';
 import 'package:appflowy/generated/locale_keys.g.dart';
+import 'package:appflowy/mobile/presentation/base/app_bar.dart';
 import 'package:appflowy/mobile/presentation/presentation.dart';
 import 'package:appflowy/mobile/presentation/setting/cloud/cloud_setting_group.dart';
 import 'package:appflowy/mobile/presentation/setting/user_session_setting_group.dart';
@@ -28,7 +29,7 @@ class _MobileHomeSettingPageState extends State<MobileHomeSettingPage> {
   Widget build(BuildContext context) {
     return FutureBuilder(
       future: getIt<AuthService>().getUser(),
-      builder: ((context, snapshot) {
+      builder: (context, snapshot) {
         String? errorMsg;
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator.adaptive());
@@ -42,14 +43,14 @@ class _MobileHomeSettingPageState extends State<MobileHomeSettingPage> {
         });
 
         return Scaffold(
-          appBar: AppBar(
-            title: Text(LocaleKeys.settings_title.tr()),
+          appBar: FlowyAppBar(
+            titleText: LocaleKeys.settings_title.tr(),
           ),
           body: userProfile == null
               ? _buildErrorWidget(errorMsg)
               : _buildSettingsWidget(userProfile),
         );
-      }),
+      },
     );
   }
 
@@ -75,7 +76,8 @@ class _MobileHomeSettingPageState extends State<MobileHomeSettingPage> {
             PersonalInfoSettingGroup(
               userProfile: userProfile,
             ),
-            const NotificationsSettingGroup(),
+            // TODO: Enable and implement along with Push Notifications
+            // const NotificationsSettingGroup(),
             const AppearanceSettingGroup(),
             const LanguageSettingGroup(),
             if (Env.enableCustomCloud) const CloudSettingGroup(),

@@ -12,9 +12,14 @@ import 'auth/auth_service.dart';
 part 'encrypt_secret_bloc.freezed.dart';
 
 class EncryptSecretBloc extends Bloc<EncryptSecretEvent, EncryptSecretState> {
-  final UserProfilePB user;
   EncryptSecretBloc({required this.user})
       : super(EncryptSecretState.initial()) {
+    _dispatch();
+  }
+
+  final UserProfilePB user;
+
+  void _dispatch() {
     on<EncryptSecretEvent>((event, emit) async {
       await event.when(
         setEncryptSecret: (secret) async {
@@ -27,11 +32,10 @@ class EncryptSecretBloc extends Bloc<EncryptSecretEvent, EncryptSecretState> {
             ..encryptionSign = user.encryptionSign
             ..encryptionType = user.encryptionType
             ..userId = user.id;
-          UserEventSetEncryptionSecret(payload).send().then((result) {
-            if (!isClosed) {
-              add(EncryptSecretEvent.didFinishCheck(result));
-            }
-          });
+          final result = await UserEventSetEncryptionSecret(payload).send();
+          if (!isClosed) {
+            add(EncryptSecretEvent.didFinishCheck(result));
+          }
           emit(
             state.copyWith(
               loadingState: const LoadingState.loading(),
