@@ -7,7 +7,6 @@ use collab_entity::CollabType;
 use collab_folder::{
   Folder, FolderData, Section, SectionItem, TrashInfo, View, ViewLayout, ViewUpdate, Workspace,
 };
-use flowy_search::folder::indexer::FolderIndexManager;
 use parking_lot::{Mutex, RwLock};
 use tracing::{error, event, info, instrument, Level};
 
@@ -21,7 +20,7 @@ use lib_infra::async_trait::async_trait;
 use crate::entities::icon::UpdateViewIconParams;
 use crate::entities::{
   view_pb_with_child_views, view_pb_without_child_views, CreateViewParams, CreateWorkspaceParams,
-  DeletedViewPB, FolderSnapshotPB, RepeatedTrashPB, RepeatedViewIdPB, RepeatedViewPB, SearchDataPB,
+  DeletedViewPB, FolderSnapshotPB, RepeatedTrashPB, RepeatedViewIdPB, RepeatedViewPB,
   UpdateViewParams, ViewPB, WorkspacePB, WorkspaceSettingPB,
 };
 use crate::manager_observer::{
@@ -56,7 +55,6 @@ pub struct FolderManager {
   pub(crate) user: Arc<dyn FolderUser>,
   pub(crate) operation_handlers: FolderOperationHandlers,
   pub cloud_service: Arc<dyn FolderCloudService>,
-  pub(crate) indexer: FolderIndexManager,
 }
 
 impl FolderManager {
@@ -65,7 +63,6 @@ impl FolderManager {
     collab_builder: Arc<AppFlowyCollabBuilder>,
     operation_handlers: FolderOperationHandlers,
     cloud_service: Arc<dyn FolderCloudService>,
-    indexer: FolderIndexManager,
   ) -> FlowyResult<Self> {
     let mutex_folder = Arc::new(MutexFolder::default());
     let manager = Self {
@@ -75,7 +72,6 @@ impl FolderManager {
       operation_handlers,
       cloud_service,
       workspace_id: Default::default(),
-      indexer,
     };
 
     Ok(manager)
@@ -1039,13 +1035,6 @@ impl FolderManager {
       views.retain(|view| !trash_ids.contains(&view.id));
       views
     })
-  }
-
-  #[tracing::instrument(level = "trace", skip(self), err)]
-  pub fn search(&self, s: &str, limit: Option<i64>) -> FlowyResult<Vec<SearchDataPB>> {
-    // let results = self.indexer.search(s, limit)?;
-    // let results = results.into_iter().map(SearchDataPB::from).collect();
-    Ok(vec![])
   }
 }
 

@@ -1,44 +1,43 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:appflowy_backend/protobuf/flowy-database2/notification.pb.dart';
 import 'package:appflowy_backend/protobuf/flowy-error/errors.pb.dart';
 import 'package:appflowy_backend/protobuf/flowy-notification/protobuf.dart';
+import 'package:appflowy_backend/protobuf/flowy-search/entities.pbenum.dart';
 import 'package:appflowy_backend/rust_stream.dart';
 import 'package:dartz/dartz.dart';
 
 import 'notification_helper.dart';
 
-// DatabasePB
-typedef DatabaseNotificationCallback = void Function(
-  DatabaseNotification,
+typedef SearchNotificationCallback = void Function(
+  SearchNotification,
   Either<Uint8List, FlowyError>,
 );
 
-class DatabaseNotificationParser
-    extends NotificationParser<DatabaseNotification, FlowyError> {
-  DatabaseNotificationParser({
+class SearchNotificationParser
+    extends NotificationParser<SearchNotification, FlowyError> {
+  SearchNotificationParser({
     super.id,
     required super.callback,
   }) : super(
-          tyParser: (ty) => DatabaseNotification.valueOf(ty),
+          tyParser: (ty) => SearchNotification.valueOf(ty),
           errorParser: (bytes) => FlowyError.fromBuffer(bytes),
         );
 }
 
-typedef DatabaseNotificationHandler = Function(
-  DatabaseNotification ty,
+typedef SearchNotificationHandler = Function(
+  SearchNotification ty,
   Either<Uint8List, FlowyError> result,
 );
 
-class DatabaseNotificationListener {
+class SearchNotificationListener {
   StreamSubscription<SubscribeObject>? _subscription;
-  DatabaseNotificationParser? _parser;
+  SearchNotificationParser? _parser;
 
-  DatabaseNotificationListener({
+  SearchNotificationListener({
     required String objectId,
-    required DatabaseNotificationHandler handler,
-  }) : _parser = DatabaseNotificationParser(id: objectId, callback: handler) {
+    required SearchNotificationHandler handler,
+  }) : _parser = SearchNotificationParser(id: objectId, callback: handler) {
     _subscription =
         RustStreamReceiver.listen((observable) => _parser?.parse(observable));
   }

@@ -2020,6 +2020,7 @@ dependencies = [
  "tempfile",
  "tokio",
  "tracing",
+ "validator",
 ]
 
 [[package]]
