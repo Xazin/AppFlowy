@@ -7,6 +7,7 @@ use collab_entity::CollabType;
 use collab_folder::{
   Folder, FolderData, Section, SectionItem, TrashInfo, View, ViewLayout, ViewUpdate, Workspace,
 };
+use flowy_search::folder::indexer::FolderIndexManager;
 use parking_lot::{Mutex, RwLock};
 use tracing::{error, event, info, instrument, Level};
 
@@ -55,6 +56,7 @@ pub struct FolderManager {
   pub(crate) user: Arc<dyn FolderUser>,
   pub(crate) operation_handlers: FolderOperationHandlers,
   pub cloud_service: Arc<dyn FolderCloudService>,
+  pub(crate) folder_indexer: Arc<FolderIndexManager>,
 }
 
 impl FolderManager {
@@ -63,6 +65,7 @@ impl FolderManager {
     collab_builder: Arc<AppFlowyCollabBuilder>,
     operation_handlers: FolderOperationHandlers,
     cloud_service: Arc<dyn FolderCloudService>,
+    folder_indexer: Arc<FolderIndexManager>,
   ) -> FlowyResult<Self> {
     let mutex_folder = Arc::new(MutexFolder::default());
     let manager = Self {
@@ -72,6 +75,7 @@ impl FolderManager {
       operation_handlers,
       cloud_service,
       workspace_id: Default::default(),
+      folder_indexer,
     };
 
     Ok(manager)

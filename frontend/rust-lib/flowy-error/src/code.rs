@@ -268,6 +268,9 @@ pub enum ErrorCode {
 
   #[error("AppFlowy data folder import error")]
   AppFlowyDataFolderImportError = 89,
+
+  #[error("IndexWriter failed to commit")]
+  IndexWriterFailedCommit = 90,
 }
 
 impl ErrorCode {
