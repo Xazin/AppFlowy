@@ -1,10 +1,11 @@
 import { ReactEditor } from 'slate-react';
 import { Editor, Element as SlateElement, NodeEntry, Range, Transforms } from 'slate';
 import { EditorInlineNodeType, FormulaNode } from '$app/application/document/document.types';
+import { isMarkActive } from '$app/components/editor/command/mark';
 
-export function insertFormula(editor: ReactEditor) {
+export function insertFormula(editor: ReactEditor, formula?: string) {
   if (editor.selection) {
-    wrapFormula(editor);
+    wrapFormula(editor, formula);
   }
 }
 
@@ -79,9 +80,5 @@ export function unwrapFormula(editor: ReactEditor) {
 }
 
 export function isFormulaActive(editor: ReactEditor) {
-  const [node] = Editor.nodes(editor, {
-    match: (n) => !Editor.isEditor(n) && SlateElement.isElement(n) && n.type === EditorInlineNodeType.Formula,
-  });
-
-  return !!node;
+  return isMarkActive(editor, EditorInlineNodeType.Formula);
 }

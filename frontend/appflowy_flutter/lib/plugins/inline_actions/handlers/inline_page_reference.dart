@@ -105,7 +105,7 @@ class InlinePageReferenceService {
     }
 
     final List<InlineActionsMenuItem> pages = [];
-    views.sort(((a, b) => b.createTime.compareTo(a.createTime)));
+    views.sort((a, b) => b.createTime.compareTo(a.createTime));
 
     for (final view in views) {
       if (view.id == currentViewId) {
@@ -171,7 +171,7 @@ class InlinePageReferenceService {
       await editorState.insertReferencePage(view, view.layout);
     } on FlowyError catch (e) {
       if (context.mounted) {
-        Dialogs.show(
+        return Dialogs.show(
           context,
           child: FlowyErrorPage.message(
             e.msg,

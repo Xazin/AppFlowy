@@ -22,9 +22,9 @@ abstract class EntryPoint {
 }
 
 class FlowyRunnerContext {
-  final Directory applicationDataDirectory;
-
   FlowyRunnerContext({required this.applicationDataDirectory});
+
+  final Directory applicationDataDirectory;
 }
 
 Future<void> runAppFlowy({bool isAnon = false}) async {
@@ -76,19 +76,23 @@ class FlowyRunner {
       IntegrationTestHelper.rustEnvsBuilder = rustEnvsBuilder;
     }
 
+    // Clear and dispose tasks from previous AppLaunch
+    if (getIt.isRegistered(instance: AppLauncher)) {
+      await getIt<AppLauncher>().dispose();
+    }
+
     // Clear all the states in case of rebuilding.
     await getIt.reset();
 
     final config = LaunchConfiguration(
       isAnon: isAnon,
+      // Unit test can't use the package_info_plus plugin
+      version: mode.isUnitTest
+          ? '1.0.0'
+          : await PackageInfo.fromPlatform().then((value) => value.version),
       rustEnvs: rustEnvsBuilder?.call() ?? {},
     );
 
-    if (!mode.isUnitTest) {
-      // Unit test can't use the package_info_plus plugin
-      config.rustEnvs["APP_VERSION"] =
-          await PackageInfo.fromPlatform().then((value) => value.version);
-    }
     // Specify the env
     await initGetIt(getIt, mode, f, config);
     await didInitGetItCallback?.call();
@@ -174,10 +178,11 @@ Future<void> initGetIt(
 }
 
 class LaunchContext {
+  LaunchContext(this.getIt, this.env, this.config);
+
   GetIt getIt;
   IntegrationMode env;
   LaunchConfiguration config;
-  LaunchContext(this.getIt, this.env, this.config);
 }
 
 enum LaunchTaskType {

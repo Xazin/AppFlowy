@@ -16,6 +16,9 @@ pub mod database;
 #[cfg(feature = "impl_from_collab_document")]
 pub mod collab;
 
+#[cfg(feature = "impl_from_collab_persistence")]
+mod collab_persistence;
+
 #[cfg(feature = "impl_from_appflowy_cloud")]
 mod cloud;
 
