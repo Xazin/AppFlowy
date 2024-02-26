@@ -12,9 +12,6 @@ part 'command_palette_bloc.freezed.dart';
 
 class CommandPaletteBloc
     extends Bloc<CommandPaletteEvent, CommandPaletteState> {
-  Timer? _debounceOnChanged;
-  final SearchListener _searchListener = SearchListener();
-
   CommandPaletteBloc() : super(const _Initial()) {
     on<CommandPaletteEvent>((event, emit) async {
       _searchListener.start(
@@ -45,6 +42,9 @@ class CommandPaletteBloc
     });
   }
 
+  Timer? _debounceOnChanged;
+  final SearchListener _searchListener = SearchListener();
+
   @override
   Future<void> close() {
     _searchListener.stop();
@@ -63,14 +63,12 @@ class CommandPaletteBloc
       add(CommandPaletteEvent.performSearch(search: value));
 
   void _onResultsChanged(RepeatedSearchResultPB results) {
-    debugPrint("REACHED OPEN");
     for (final item in results.items) {
       debugPrint("ITEM: ${item.data}");
     }
   }
 
   void _onResultsClosed(RepeatedSearchResultPB results) {
-    debugPrint("REACHED CLOSED");
     for (final item in results.items) {
       debugPrint("ITEM: ${item.data}");
     }

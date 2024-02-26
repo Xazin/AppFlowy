@@ -64,8 +64,8 @@ dart = [
     "flowy-database2/dart",
 ]
 ts = [
-    "flowy-date/ts",
-    "flowy-search/ts",
+    "flowy-date/tauri_ts",
+    "flowy-search/tauri_ts",
     "flowy-user/tauri_ts",
     "flowy-folder/tauri_ts",
     "flowy-database2/ts",

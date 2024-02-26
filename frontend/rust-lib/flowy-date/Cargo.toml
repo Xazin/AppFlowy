@@ -25,4 +25,3 @@ flowy-codegen.workspace = true
 [features]
 dart = ["flowy-codegen/dart"]
 tauri_ts = ["flowy-codegen/ts"]
-wasm_build = ["lib-dispatch/single_thread", "flowy-codegen/ts"]

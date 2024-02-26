@@ -39,15 +39,16 @@ tantivy = { version = "0.21.1", optional = true }
 impl_from_dispatch_error = ["lib-dispatch"]
 impl_from_serde = []
 impl_from_reqwest = ["reqwest"]
+impl_from_collab_persistence = ["collab-plugins"]
 impl_from_collab_document = [
     "collab-document",
     "impl_from_reqwest",
     "collab-plugins",
 ]
+impl_from_collab_folder = ["collab-folder"]
 impl_from_collab_database = ["collab-database"]
 impl_from_url = ["url"]
 impl_from_tantivy = ["tantivy"]
-wasm_build = ["lib-dispatch/wasm_build"]
 
 impl_from_sqlite = ["flowy-sqlite", "r2d2"]
 impl_from_appflowy_cloud = ["client-api"]
