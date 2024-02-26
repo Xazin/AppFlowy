@@ -102,6 +102,7 @@ pub(crate) async fn create_orphan_view_handler(
   data_result_ok(view_pb_without_child_views(Arc::new(view)))
 }
 
+#[tracing::instrument(level = "debug", skip(data, folder), err)]
 pub(crate) async fn read_view_handler(
   data: AFPluginData<ViewIdPB>,
   folder: AFPluginState<Weak<FolderManager>>,
@@ -340,4 +341,12 @@ pub(crate) async fn search_handler(
   let results = folder.search(&data.search, data.limit)?;
   let repeated_results: RepeatedSearchDataPB = results.into();
   data_result_ok(repeated_results)
+}
+
+pub(crate) async fn reload_workspace_handler(
+  folder: AFPluginState<Weak<FolderManager>>,
+) -> Result<(), FlowyError> {
+  let folder = upgrade_folder(folder)?;
+  folder.reload_workspace().await?;
+  Ok(())
 }

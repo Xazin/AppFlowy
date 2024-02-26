@@ -1,10 +1,10 @@
 import 'dart:io';
 
-import 'package:appflowy/env/cloud_env.dart';
 import 'package:appflowy/generated/flowy_svgs.g.dart';
 import 'package:appflowy/generated/locale_keys.g.dart';
 import 'package:appflowy/mobile/presentation/bottom_sheet/bottom_sheet.dart';
 import 'package:appflowy/plugins/document/application/prelude.dart';
+import 'package:appflowy/plugins/document/presentation/editor_plugins/actions/mobile_block_action_buttons.dart';
 import 'package:appflowy/plugins/document/presentation/editor_plugins/image/custom_image_block_component.dart';
 import 'package:appflowy/plugins/document/presentation/editor_plugins/image/image_util.dart';
 import 'package:appflowy/plugins/document/presentation/editor_plugins/image/upload_image_menu.dart';
@@ -42,6 +42,9 @@ class ImagePlaceholderState extends State<ImagePlaceholder> {
   final documentService = DocumentService();
   late final editorState = context.read<EditorState>();
 
+  bool showLoading = false;
+  String? errorMessage;
+
   @override
   Widget build(BuildContext context) {
     final Widget child = DecoratedBox(
@@ -63,9 +66,7 @@ class ImagePlaceholderState extends State<ImagePlaceholder> {
                 size: Size.square(24),
               ),
               const HSpace(10),
-              FlowyText(
-                LocaleKeys.document_plugins_image_addAnImage.tr(),
-              ),
+              ..._buildTrailing(context),
             ],
           ),
         ),
@@ -84,6 +85,7 @@ class ImagePlaceholderState extends State<ImagePlaceholder> {
         clickHandler: PopoverClickHandler.gestureDetector,
         popupBuilder: (context) {
           return UploadImageMenu(
+            limitMaximumImageSize: !_isLocalMode(),
             onSelectedLocalImage: (path) {
               controller.close();
               WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
@@ -107,13 +109,41 @@ class ImagePlaceholderState extends State<ImagePlaceholder> {
         child: child,
       );
     } else {
-      return GestureDetector(
-        onTap: () {
-          editorState.updateSelectionWithReason(null, extraInfo: {});
-          showUploadImageMenu();
-        },
-        child: child,
+      return MobileBlockActionButtons(
+        node: widget.node,
+        editorState: editorState,
+        child: GestureDetector(
+          onTap: () {
+            editorState.updateSelectionWithReason(null, extraInfo: {});
+            showUploadImageMenu();
+          },
+          child: child,
+        ),
       );
+    }
+  }
+
+  List<Widget> _buildTrailing(BuildContext context) {
+    if (errorMessage != null) {
+      return [
+        FlowyText(
+          '${LocaleKeys.document_plugins_image_imageUploadFailed.tr()}: ${errorMessage!}',
+        ),
+      ];
+    } else if (showLoading) {
+      return [
+        FlowyText(
+          LocaleKeys.document_imageBlock_imageIsUploading.tr(),
+        ),
+        const HSpace(8),
+        const CircularProgressIndicator.adaptive(),
+      ];
+    } else {
+      return [
+        FlowyText(
+          LocaleKeys.document_plugins_image_addAnImage.tr(),
+        ),
+      ];
     }
   }
 
@@ -121,6 +151,7 @@ class ImagePlaceholderState extends State<ImagePlaceholder> {
     if (PlatformExtension.isDesktopOrWeb) {
       controller.show();
     } else {
+      final isLocalMode = _isLocalMode();
       showMobileBottomSheet(
         context,
         title: LocaleKeys.editor_image.tr(),
@@ -128,12 +159,14 @@ class ImagePlaceholderState extends State<ImagePlaceholder> {
         showCloseButton: true,
         showDragHandle: true,
         builder: (context) {
-          return ConstrainedBox(
+          return Container(
+            margin: const EdgeInsets.only(top: 12.0),
             constraints: const BoxConstraints(
               maxHeight: 340,
               minHeight: 80,
             ),
             child: UploadImageMenu(
+              limitMaximumImageSize: !isLocalMode,
               supportTypes: const [
                 UploadImageType.local,
                 UploadImageType.url,
@@ -159,30 +192,46 @@ class ImagePlaceholderState extends State<ImagePlaceholder> {
   }
 
   Future<void> insertLocalImage(String? url) async {
+    controller.close();
+
     if (url == null || url.isEmpty) {
-      controller.close();
       return;
     }
 
     final transaction = editorState.transaction;
-    final type = await getAuthenticatorType();
+
     String? path;
+    String? errorMessage;
     CustomImageType imageType = CustomImageType.local;
 
     // if the user is using local authenticator, we need to save the image to local storage
-    if (type == AuthenticatorType.local) {
+    if (_isLocalMode()) {
+      // don't limit the image size for local mode.
       path = await saveImageToLocalStorage(url);
     } else {
       // else we should save the image to cloud storage
-      path = await saveImageToCloudStorage(url);
+      setState(() {
+        showLoading = true;
+        this.errorMessage = null;
+      });
+      (path, errorMessage) = await saveImageToCloudStorage(url);
+      setState(() {
+        showLoading = false;
+        this.errorMessage = errorMessage;
+      });
       imageType = CustomImageType.internal;
     }
 
-    if (path == null && context.mounted) {
+    if (mounted && path == null) {
       showSnackBarMessage(
         context,
-        LocaleKeys.document_imageBlock_error_invalidImage.tr(),
+        errorMessage == null
+            ? LocaleKeys.document_imageBlock_error_invalidImage.tr()
+            : ': $errorMessage',
       );
+      setState(() {
+        this.errorMessage = errorMessage;
+      });
       return;
     }
 
@@ -223,12 +272,8 @@ class ImagePlaceholderState extends State<ImagePlaceholder> {
 
       final response = await get(uri);
       await File(copyToPath).writeAsBytes(response.bodyBytes);
-
-      final transaction = editorState.transaction;
-      transaction.updateNode(widget.node, {
-        ImageBlockKeys.url: copyToPath,
-      });
-      await editorState.apply(transaction);
+      await insertLocalImage(copyToPath);
+      await File(copyToPath).delete();
     } catch (e) {
       Log.error('cannot save image file', e);
     }
@@ -249,5 +294,9 @@ class ImagePlaceholderState extends State<ImagePlaceholder> {
       ImageBlockKeys.url: url,
     });
     await editorState.apply(transaction);
+  }
+
+  bool _isLocalMode() {
+    return context.read<DocumentBloc>().isLocalMode;
   }
 }

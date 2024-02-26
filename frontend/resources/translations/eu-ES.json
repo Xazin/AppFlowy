@@ -50,12 +50,12 @@
     "copyLink": "Esteka kopiatu"
   },
   "moreAction": {
-    "small": "txikia",
-    "medium": "ertaina",
-    "large": "handia",
     "fontSize": "Letra tamaina",
     "import": "Inportatu",
-    "moreOptions": "Aukera gehiago"
+    "moreOptions": "Aukera gehiago",
+    "small": "txikia",
+    "medium": "ertaina",
+    "large": "handia"
   },
   "importPanel": {
     "textAndMarkdown": "Testua eta Markdown",
@@ -176,9 +176,8 @@
     "delete": "Ezabatu",
     "duplicate": "Bikoiztu",
     "putback": "Jarri Atzera",
-    "Done": "Eginda",
-    "Cancel": "Ezteztatu",
-    "OK": "OK"
+    "cancel": "Ezteztatu",
+    "ok": "OK"
   },
   "label": {
     "welcome": "Ongi etorri!",

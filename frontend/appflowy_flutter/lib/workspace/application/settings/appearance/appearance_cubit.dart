@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:appflowy/core/config/kv.dart';
+import 'package:appflowy/core/config/kv_keys.dart';
 import 'package:appflowy/startup/startup.dart';
 import 'package:appflowy/user/application/user_settings_service.dart';
 import 'package:appflowy/util/color_to_hex_string.dart';
@@ -26,9 +28,6 @@ part 'appearance_cubit.freezed.dart';
 /// - [UserTimeFormatPB]
 ///
 class AppearanceSettingsCubit extends Cubit<AppearanceSettingsState> {
-  final AppearanceSettingsPB _appearanceSettings;
-  final DateTimeSettingsPB _dateTimeSettings;
-
   AppearanceSettingsCubit(
     AppearanceSettingsPB appearanceSettings,
     DateTimeSettingsPB dateTimeSettings,
@@ -52,9 +51,7 @@ class AppearanceSettingsCubit extends Cubit<AppearanceSettingsState> {
             appearanceSettings.documentSetting.cursorColor.isEmpty
                 ? null
                 : Color(
-                    int.parse(
-                      appearanceSettings.documentSetting.cursorColor,
-                    ),
+                    int.parse(appearanceSettings.documentSetting.cursorColor),
                   ),
             appearanceSettings.documentSetting.selectionColor.isEmpty
                 ? null
@@ -63,14 +60,41 @@ class AppearanceSettingsCubit extends Cubit<AppearanceSettingsState> {
                       appearanceSettings.documentSetting.selectionColor,
                     ),
                   ),
+            1.0,
           ),
-        );
+        ) {
+    readTextScaleFactor();
+  }
+
+  final AppearanceSettingsPB _appearanceSettings;
+  final DateTimeSettingsPB _dateTimeSettings;
+
+  Future<void> setTextScaleFactor(double textScaleFactor) async {
+    // only saved in local storage, this value is not synced across devices
+    await getIt<KeyValueStorage>().set(
+      KVKeys.textScaleFactor,
+      textScaleFactor.toString(),
+    );
+
+    // don't allow the text scale factor to be greater than 1.0, it will cause
+    // ui issues
+    emit(state.copyWith(textScaleFactor: textScaleFactor.clamp(0.7, 1.0)));
+  }
+
+  Future<void> readTextScaleFactor() async {
+    final textScaleFactor = await getIt<KeyValueStorage>().getWithFormat(
+          KVKeys.textScaleFactor,
+          (value) => double.parse(value),
+        ) ??
+        1.0;
+    emit(state.copyWith(textScaleFactor: textScaleFactor.clamp(0.7, 1.0)));
+  }
 
   /// Update selected theme in the user's settings and emit an updated state
   /// with the AppTheme named [themeName].
   Future<void> setTheme(String themeName) async {
     _appearanceSettings.theme = themeName;
-    _saveAppearanceSettings();
+    unawaited(_saveAppearanceSettings());
     emit(state.copyWith(appTheme: await AppTheme.fromName(themeName)));
   }
 
@@ -238,25 +262,21 @@ class AppearanceSettingsCubit extends Cubit<AppearanceSettingsState> {
   }
 
   Future<void> _saveDateTimeSettings() async {
-    UserSettingsBackendService()
-        .setDateTimeSettings(_dateTimeSettings)
-        .then((result) {
-      result.fold(
-        (error) => Log.error(error),
-        (_) => null,
-      );
-    });
+    final result = await UserSettingsBackendService()
+        .setDateTimeSettings(_dateTimeSettings);
+    result.fold(
+      (_) => null,
+      (error) => Log.error(error),
+    );
   }
 
   Future<void> _saveAppearanceSettings() async {
-    UserSettingsBackendService()
-        .setAppearanceSetting(_appearanceSettings)
-        .then((result) {
-      result.fold(
-        (l) => null,
-        (error) => Log.error(error),
-      );
-    });
+    final result = await UserSettingsBackendService()
+        .setAppearanceSetting(_appearanceSettings);
+    result.fold(
+      (l) => null,
+      (error) => Log.error(error),
+    );
   }
 }
 
@@ -353,6 +373,7 @@ class AppearanceSettingsState with _$AppearanceSettingsState {
     required String timezoneId,
     required Color? documentCursorColor,
     required Color? documentSelectionColor,
+    required double textScaleFactor,
   }) = _AppearanceSettingsState;
 
   factory AppearanceSettingsState.initial(
@@ -370,6 +391,7 @@ class AppearanceSettingsState with _$AppearanceSettingsState {
     String timezoneId,
     Color? documentCursorColor,
     Color? documentSelectionColor,
+    double textScaleFactor,
   ) {
     return AppearanceSettingsState(
       appTheme: appTheme,
@@ -386,6 +408,7 @@ class AppearanceSettingsState with _$AppearanceSettingsState {
       timezoneId: timezoneId,
       documentCursorColor: documentCursorColor,
       documentSelectionColor: documentSelectionColor,
+      textScaleFactor: textScaleFactor,
     );
   }
 

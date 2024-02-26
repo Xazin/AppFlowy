@@ -2,10 +2,13 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import 'package:appflowy/startup/startup.dart';
 import 'package:appflowy/workspace/application/home/home_setting_bloc.dart';
 import 'package:appflowy/workspace/application/settings/appearance/appearance_cubit.dart';
+import 'package:appflowy/workspace/application/sidebar/rename_view/rename_view_bloc.dart';
 import 'package:appflowy/workspace/application/tabs/tabs_bloc.dart';
 import 'package:appflowy/workspace/presentation/command_palette/command_palette.dart';
+import 'package:appflowy/workspace/presentation/home/menu/sidebar/sidebar_user.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:provider/provider.dart';
 
@@ -19,28 +22,29 @@ typedef KeyDownHandler = void Function(HotKey hotKey);
 /// relevant [HotKey].
 ///
 class HotKeyItem {
-  final HotKey hotKey;
-  final KeyDownHandler? keyDownHandler;
-
   HotKeyItem({
     required this.hotKey,
     this.keyDownHandler,
   });
+
+  final HotKey hotKey;
+  final KeyDownHandler? keyDownHandler;
 
   void register() =>
       hotKeyManager.register(hotKey, keyDownHandler: keyDownHandler);
 }
 
 class HomeHotKeys extends StatelessWidget {
-  final Widget child;
   const HomeHotKeys({required this.child, super.key});
+
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
     // Collapse sidebar menu
     HotKeyItem(
       hotKey: HotKey(
-        KeyCode.backslash,
+        Platform.isMacOS ? KeyCode.period : KeyCode.backslash,
         modifiers: [Platform.isMacOS ? KeyModifier.meta : KeyModifier.control],
         // Set hotkey scope (default is HotKeyScope.system)
         scope: HotKeyScope.inapp, // Set as inapp-wide hotkey.
@@ -98,7 +102,23 @@ class HomeHotKeys extends StatelessWidget {
     // Command Palette
     commandPaletteHotKey(context).register();
 
+    // Rename current view
+    HotKeyItem(
+      hotKey: HotKey(
+        KeyCode.f2,
+        scope: HotKeyScope.inapp,
+      ),
+      keyDownHandler: (_) =>
+          getIt<RenameViewBloc>().add(const RenameViewEvent.open()),
+    ).register();
+
+    _asyncRegistration(context);
+
     return child;
+  }
+
+  Future<void> _asyncRegistration(BuildContext context) async {
+    (await openSettingsHotKey(context))?.register();
   }
 
   void _selectTab(BuildContext context, int change) {
