@@ -91,6 +91,8 @@ enum FeatureFlag {
       // release this feature in version 0.5.4
       FeatureFlag.syncDatabase,
       FeatureFlag.syncDocument,
+      // release this feature in version 0.5.5
+      FeatureFlag.search,
     ].contains(this)) {
       return true;
     }

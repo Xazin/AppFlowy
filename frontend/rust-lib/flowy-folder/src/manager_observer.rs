@@ -6,6 +6,7 @@ use collab_folder::{
   Folder, SectionChange, SectionChangeReceiver, TrashSectionChange, View, ViewChange,
   ViewChangeReceiver,
 };
+use flowy_search_pub::entities::{FolderIndexManager, IndexableData};
 use tokio_stream::wrappers::WatchStream;
 use tokio_stream::StreamExt;
 use tracing::{event, Level};
@@ -23,6 +24,7 @@ use crate::notification::{send_notification, FolderNotification};
 pub(crate) fn subscribe_folder_view_changed(
   mut rx: ViewChangeReceiver,
   weak_mutex_folder: &Weak<MutexFolder>,
+  folder_indexer: Arc<dyn FolderIndexManager>,
 ) {
   let weak_mutex_folder = weak_mutex_folder.clone();
   af_spawn(async move {
@@ -31,6 +33,7 @@ pub(crate) fn subscribe_folder_view_changed(
         tracing::trace!("Did receive view change: {:?}", value);
         match value {
           ViewChange::DidCreateView { view } => {
+            handle_view_created_indexer(folder.clone(), folder_indexer.clone(), view.clone());
             notify_child_views_changed(
               view_pb_without_child_views(view.clone()),
               ChildViewChangeReason::Create,
@@ -38,6 +41,7 @@ pub(crate) fn subscribe_folder_view_changed(
             notify_parent_view_did_change(folder.clone(), vec![view.parent_view_id]);
           },
           ViewChange::DidDeleteView { views } => {
+            handle_views_removed_indexer(folder_indexer.clone(), views.clone());
             for view in views {
               notify_child_views_changed(
                 view_pb_without_child_views(view.as_ref().clone()),
@@ -46,6 +50,7 @@ pub(crate) fn subscribe_folder_view_changed(
             }
           },
           ViewChange::DidUpdate { view } => {
+            handle_view_updated_indexer(folder.clone(), folder_indexer.clone(), view.clone());
             notify_view_did_change(view.clone());
             notify_child_views_changed(
               view_pb_without_child_views(view.clone()),
@@ -255,4 +260,75 @@ pub(crate) fn notify_child_views_changed(view_pb: ViewPB, reason: ChildViewChang
   send_notification(&parent_view_id, FolderNotification::DidUpdateChildViews)
     .payload(payload)
     .send();
+}
+
+#[tracing::instrument(level = "debug", skip_all)]
+pub(crate) fn handle_view_created_indexer(
+  folder: Arc<MutexFolder>,
+  folder_indexer: Arc<dyn FolderIndexManager>,
+  view: View,
+) -> Option<()> {
+  let folder = folder.lock();
+  let folder = folder.as_ref()?;
+  let workspace_id = folder.get_workspace_id();
+
+  // We spawn a blocking task to update the view from the indexer
+  af_spawn(async move {
+    let index_data = IndexableData {
+      id: view.id.clone(),
+      data: view.name.clone(),
+      icon: view.icon.clone(),
+      layout: view.layout.clone(),
+      workspace_id,
+    };
+
+    if let Err(e) = folder_indexer.add_index(index_data) {
+      tracing::error!("Failed to update index: {:?}", e);
+    }
+  });
+
+  None
+}
+
+#[tracing::instrument(level = "debug", skip_all)]
+pub(crate) fn handle_view_updated_indexer(
+  folder: Arc<MutexFolder>,
+  folder_indexer: Arc<dyn FolderIndexManager>,
+  view: View,
+) -> Option<()> {
+  let folder = folder.lock();
+  let folder = folder.as_ref()?;
+  let workspace_id = folder.get_workspace_id();
+
+  // We spawn a blocking task to update the view from the indexer
+  af_spawn(async move {
+    let index_data = IndexableData {
+      id: view.id,
+      data: view.name,
+      icon: view.icon,
+      layout: view.layout,
+      workspace_id,
+    };
+
+    if let Err(e) = folder_indexer.update_index(index_data) {
+      tracing::error!("Failed to update index: {:?}", e);
+    }
+  });
+
+  None
+}
+
+#[tracing::instrument(level = "debug", skip_all)]
+pub(crate) fn handle_views_removed_indexer(
+  folder_indexer: Arc<dyn FolderIndexManager>,
+  views: Vec<Arc<View>>,
+) {
+  let delete_ids: Vec<String> = views.iter().map(|v| v.id.to_owned()).collect();
+
+  // We spawn a blocking task to remove the views from the indexer
+  af_spawn(async move {
+    if let Err(e) = folder_indexer.remove_indices(delete_ids) {
+      tracing::error!("Failed to remove indexes: {:?}", e);
+    }
+  });
 }

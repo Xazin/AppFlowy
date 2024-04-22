@@ -39,15 +39,7 @@ pub struct FolderIndexManagerImpl {
 const FOLDER_INDEX_DIR: &str = "folder_index";
 
 impl FolderIndexManagerImpl {
-  pub fn new(auth_user: Option<Weak<AuthenticateUser>>) -> Self {
-    // TODO(Mathias): Temporarily disable seaerch
-    let auth_user = match auth_user {
-      Some(auth_user) => auth_user,
-      None => {
-        return FolderIndexManagerImpl::empty();
-      },
-    };
-
+  pub fn new(auth_user: Weak<AuthenticateUser>) -> Self {
     // AuthenticateUser is required to get the index path
     let authenticate_user = auth_user.upgrade();
 
@@ -408,14 +400,14 @@ impl IndexManager for FolderIndexManagerImpl {
 }
 
 impl FolderIndexManager for FolderIndexManagerImpl {
-  fn index_all_views(&self, views: Vec<View>, workspace_id: String) {
+  fn index_all_views(&self, views: Vec<Arc<View>>, workspace_id: String) {
     let indexable_data = views
       .into_iter()
       .map(|view| IndexableData {
-        id: view.id,
-        data: view.name,
-        icon: view.icon,
-        layout: view.layout,
+        id: view.id.clone(),
+        data: view.name.clone(),
+        icon: view.icon.clone(),
+        layout: view.layout.clone(),
         workspace_id: workspace_id.clone(),
       })
       .collect();

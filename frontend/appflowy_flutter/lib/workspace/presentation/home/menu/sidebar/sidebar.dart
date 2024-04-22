@@ -30,6 +30,7 @@ import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flowy_infra_ui/style_widget/button.dart';
 import 'package:flowy_infra_ui/style_widget/text.dart';
+import 'package:flowy_infra_ui/widget/flowy_tooltip.dart';
 import 'package:flowy_infra_ui/widget/spacing.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -294,10 +295,15 @@ class _SidebarSearchButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FlowyButton(
-      onTap: () => CommandPalette.of(context).toggle(),
-      leftIcon: const FlowySvg(FlowySvgs.search_s),
-      text: FlowyText(LocaleKeys.search_label.tr()),
+    return FlowyTooltip(
+      message: PlatformExtension.isMacOS
+          ? LocaleKeys.sideBar_searchTooltipMac.tr()
+          : LocaleKeys.sideBar_searchTooltip.tr(),
+      child: FlowyButton(
+        onTap: () => CommandPalette.of(context).toggle(),
+        leftIcon: const FlowySvg(FlowySvgs.search_s),
+        text: FlowyText(LocaleKeys.search_label.tr()),
+      ),
     );
   }
 }

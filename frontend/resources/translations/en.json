@@ -228,7 +228,9 @@
     "addAPage": "Add a page",
     "addAPageToPrivate": "Add a page to private space",
     "addAPageToWorkspace": "Add a page to workspace",
-    "recent": "Recent"
+    "recent": "Recent",
+    "searchTooltip": "CTRL+P to open search",
+    "searchTooltipMac": "CMD+P to open search"
   },
   "notifications": {
     "export": {

@@ -137,7 +137,7 @@ impl FolderManager {
 
     // Index all views in the folder if needed
     if !self.folder_indexer.is_indexed() {
-      let views = folder.get_all_views_recursively();
+      let views = folder.views.get_all_views();
       let folder_indexer = self.folder_indexer.clone();
 
       // We spawn a blocking task to index all views in the folder
@@ -153,7 +153,8 @@ impl FolderManager {
     subscribe_folder_sync_state_changed(workspace_id.clone(), folder_state_rx, &weak_mutex_folder);
     subscribe_folder_snapshot_state_changed(workspace_id, &weak_mutex_folder);
     subscribe_folder_trash_changed(section_change_rx, &weak_mutex_folder);
-    subscribe_folder_view_changed(view_rx, &weak_mutex_folder);
+    subscribe_folder_view_changed(view_rx, &weak_mutex_folder, self.folder_indexer.clone());
+
     Ok(())
   }
 
