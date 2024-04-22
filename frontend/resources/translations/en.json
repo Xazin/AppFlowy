@@ -656,7 +656,7 @@
       "insertRight": "Insert Right",
       "duplicate": "Duplicate",
       "delete": "Delete",
-      "wrap": "Wrap",
+      "wrapCellContent": "Wrap text",
       "clear": "Clear cells",
       "textFieldName": "Text",
       "checkboxFieldName": "Checkbox",
