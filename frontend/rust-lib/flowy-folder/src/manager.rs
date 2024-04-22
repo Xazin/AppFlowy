@@ -1005,6 +1005,11 @@ impl FolderManager {
         handler.delete_view(view_id).await?;
       }
     }
+
+    let _ = self
+      .folder_indexer
+      .remove_indices(vec![view_id.to_string()]);
+
     Ok(())
   }
 

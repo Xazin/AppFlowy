@@ -332,9 +332,14 @@ pub(crate) async fn delete_trash_handler(
 ) -> Result<(), FlowyError> {
   let folder = upgrade_folder(folder)?;
   let trash_ids = identifiers.into_inner().items;
-  for trash_id in trash_ids {
+  for trash_id in trash_ids.clone() {
     let _ = folder.delete_trash(&trash_id.id).await;
   }
+
+  let _ = folder
+    .folder_indexer
+    .remove_indices(trash_ids.into_iter().map(|t| t.id).collect());
+
   Ok(())
 }
 
