@@ -16,6 +16,7 @@ import 'package:appflowy/plugins/database/tab_bar/tab_bar_view.dart';
 import 'package:appflowy/plugins/database/widgets/card/card_bloc.dart';
 import 'package:appflowy/plugins/database/widgets/cell/card_cell_style_maps/desktop_board_card_cell_style.dart';
 import 'package:appflowy/plugins/database/widgets/row/row_detail.dart';
+import 'package:appflowy/shared/conditional_listenable_builder.dart';
 import 'package:appflowy_backend/protobuf/flowy-database2/row_entities.pb.dart';
 import 'package:appflowy_backend/protobuf/flowy-folder/view.pb.dart';
 import 'package:appflowy_board/appflowy_board.dart';
