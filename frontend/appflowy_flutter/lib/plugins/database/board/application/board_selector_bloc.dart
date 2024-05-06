@@ -45,13 +45,3 @@ class BoardSelectorState with _$BoardSelectorState {
     @Default(null) Offset? endPosition,
   }) = _BoardSelectorState;
 }
-
-  // const factory DocumentPageStyleState({
-  //   @Default(PageStyleFontLayout.normal) PageStyleFontLayout fontLayout,
-  //   @Default(PageStyleLineHeightLayout.normal)
-  //   PageStyleLineHeightLayout lineHeightLayout,
-  //   // the default font family is null, which means the system font
-  //   @Default(null) String? fontFamily,
-  //   @Default(2.0) double iconPadding,
-  //   required PageStyleCover coverImage,
-  // }) = _DocumentPageStyleState;
