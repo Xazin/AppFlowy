@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:collection';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:appflowy/plugins/database/application/defines.dart';
 import 'package:appflowy/plugins/database/application/field/field_info.dart';
-import 'package:appflowy/plugins/database/domain/group_service.dart';
 import 'package:appflowy/plugins/database/application/row/row_service.dart';
+import 'package:appflowy/plugins/database/domain/group_service.dart';
 import 'package:appflowy_backend/log.dart';
 import 'package:appflowy_backend/protobuf/flowy-database2/protobuf.dart';
 import 'package:appflowy_backend/protobuf/flowy-error/errors.pb.dart';
@@ -13,7 +15,6 @@ import 'package:appflowy_editor/appflowy_editor.dart' hide Log;
 import 'package:appflowy_result/appflowy_result.dart';
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:intl/intl.dart';
@@ -22,6 +23,7 @@ import 'package:protobuf/protobuf.dart' hide FieldInfo;
 import '../../application/database_controller.dart';
 import '../../application/field/field_controller.dart';
 import '../../application/row/row_cache.dart';
+
 import 'group_controller.dart';
 
 part 'board_bloc.freezed.dart';
@@ -703,10 +705,7 @@ class GroupItem extends AppFlowyGroupItem {
 /// FieldType.Multiselect), we include the card's group id as well.
 ///
 class GroupedRowId extends Equatable {
-  const GroupedRowId({
-    required this.rowId,
-    required this.groupId,
-  });
+  const GroupedRowId({required this.rowId, required this.groupId});
 
   final String rowId;
   final String groupId;

@@ -1,6 +1,7 @@
-import 'package:appflowy/plugins/database/board/application/board_bloc.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+
+import 'package:appflowy/plugins/database/board/application/board_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'board_focus_scope.dart';
@@ -12,7 +13,7 @@ class BoardShortcutContainer extends StatelessWidget {
     required this.child,
   });
 
-  final CardFocusScope focusScope;
+  final BoardFocusScope focusScope;
   final Widget child;
 
   @override
@@ -70,17 +71,15 @@ class BoardShortcutContainer extends StatelessWidget {
       child: FocusScope(
         child: Focus(
           child: Builder(
-            builder: (context) {
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () {
-                  final focusNode = Focus.of(context);
-                  focusNode.requestFocus();
-                  focusScope.clear();
-                },
-                child: child,
-              );
-            },
+            builder: (_) => GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                final focusNode = Focus.of(context);
+                focusNode.requestFocus();
+                focusScope.clear();
+              },
+              child: child,
+            ),
           ),
         ),
       ),

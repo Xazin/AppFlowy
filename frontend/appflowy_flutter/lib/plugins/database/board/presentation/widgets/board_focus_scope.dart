@@ -1,12 +1,13 @@
-import 'package:appflowy/plugins/database/board/application/board_bloc.dart';
-import 'package:appflowy_board/appflowy_board.dart';
-import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
-class CardFocusScope extends ChangeNotifier
+import 'package:appflowy/plugins/database/board/application/board_bloc.dart';
+import 'package:appflowy_board/appflowy_board.dart';
+import 'package:collection/collection.dart';
+
+class BoardFocusScope extends ChangeNotifier
     implements ValueListenable<List<GroupedRowId>> {
-  CardFocusScope({
+  BoardFocusScope({
     required this.boardController,
   });
 
@@ -28,7 +29,7 @@ class CardFocusScope extends ChangeNotifier
     notifyListeners();
   }
 
-  void unFocus(List<GroupedRowId> groupedRowIds) {
+  void unfocus(List<GroupedRowId> groupedRowIds) {
     _deepCopy();
     _focusedCards.removeWhere(groupedRowIds.contains);
     notifyListeners();
@@ -364,9 +365,7 @@ class CardFocusScope extends ChangeNotifier
     }
   }
 
-  void _deepCopy() {
-    _focusedCards = [..._focusedCards];
-  }
+  void _deepCopy() => _focusedCards = [..._focusedCards];
 }
 
 class ConditionalListenableBuilder<T> extends StatefulWidget {
