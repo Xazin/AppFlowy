@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 import 'package:appflowy/generated/flowy_svgs.g.dart';
 import 'package:appflowy/generated/locale_keys.g.dart';
 import 'package:appflowy/plugins/database/application/cell/bloc/text_cell_bloc.dart';
@@ -14,7 +16,6 @@ import 'package:appflowy_popover/appflowy_popover.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flowy_infra_ui/flowy_infra_ui.dart';
 import 'package:flowy_infra_ui/widget/flowy_tooltip.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 const _kBannerActionHeight = 40.0;
@@ -144,11 +145,11 @@ class _BannerTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<RowBannerBloc, RowBannerState>(
       builder: (context, state) {
-        final children = <Widget>[
+        final children = [
           if (state.rowMeta.icon.isNotEmpty)
             EmojiButton(
               emoji: state.rowMeta.icon,
-              showEmojiPicker: () => popoverController.show(),
+              showEmojiPicker: popoverController.show,
             ),
           const HSpace(4),
           if (state.primaryField != null)
@@ -158,7 +159,7 @@ class _BannerTitle extends StatelessWidget {
                   fieldId: state.primaryField!.id,
                   rowId: rowController.rowId,
                 ),
-                skinMap: EditableCellSkinMap(textSkin: _TitleSkin()),
+                skinMap: EditableCellSkinMap(textSkin: const _TitleSkin()),
               ),
             ),
         ];
@@ -168,7 +169,7 @@ class _BannerTitle extends StatelessWidget {
           triggerActions: PopoverTriggerFlags.none,
           direction: PopoverDirection.bottomWithLeftAligned,
           constraints: const BoxConstraints(maxWidth: 380, maxHeight: 300),
-          popupBuilder: (popoverContext) => EmojiSelectionMenu(
+          popupBuilder: (_) => EmojiSelectionMenu(
             onSubmitted: (emoji) {
               popoverController.close();
               context.read<RowBannerBloc>().add(RowBannerEvent.setIcon(emoji));
@@ -197,13 +198,13 @@ class EmojiButton extends StatelessWidget {
     return SizedBox(
       width: _kBannerActionHeight,
       child: FlowyButton(
+        onTap: showEmojiPicker,
         margin: EdgeInsets.zero,
         text: FlowyText.medium(
           emoji,
           fontSize: 30,
           textAlign: TextAlign.center,
         ),
-        onTap: showEmojiPicker,
       ),
     );
   }
@@ -262,7 +263,7 @@ class RowActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppFlowyPopover(
       direction: PopoverDirection.bottomWithLeftAligned,
-      popupBuilder: (context) => RowActionList(rowController: rowController),
+      popupBuilder: (_) => RowActionList(rowController: rowController),
       child: FlowyTooltip(
         message: LocaleKeys.grid_rowPage_moreRowActions.tr(),
         child: FlowyIconButton(
@@ -277,6 +278,8 @@ class RowActionButton extends StatelessWidget {
 }
 
 class _TitleSkin extends IEditableTextCellSkin {
+  const _TitleSkin();
+
   @override
   Widget build(
     BuildContext context,
