@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 
 import 'package:bloc/bloc.dart';
@@ -17,15 +19,40 @@ class BoardSelectorBloc extends Bloc<BoardSelectorEvent, BoardSelectorState> {
               endPosition: startPosition,
             ),
           );
+
+          _timer?.cancel();
+          _timer = Timer.periodic(
+            const Duration(milliseconds: 100),
+            (_) => _evaluateEmit,
+          );
         },
-        addDrag: (Offset position) {
-          emit(state.copyWith(endPosition: position));
-        },
+        addDrag: (Offset position) => _endOffset = _endOffset,
+        notifyDrag: () => emit(state.copyWith(endPosition: _endOffset)),
         endDragging: () {
+          _timer?.cancel();
+          _timer = null;
           emit(state.copyWith(isDragging: false));
         },
       );
     });
+  }
+
+  Timer? _timer;
+
+  Offset? _startOffset;
+  Offset? _endOffset;
+
+  void _evaluateEmit() {
+    if (!state.isDragging) {
+      _timer?.cancel();
+      _timer = null;
+      return;
+    }
+
+    if (state.startPosition != _startOffset ||
+        state.endPosition != _endOffset) {
+      add(const BoardSelectorEvent.notifyDrag());
+    }
   }
 }
 
@@ -34,6 +61,7 @@ class BoardSelectorEvent with _$BoardSelectorEvent {
   const factory BoardSelectorEvent.startDragging(Offset startPosition) =
       _StartDragging;
   const factory BoardSelectorEvent.addDrag(Offset position) = _AddDrag;
+  const factory BoardSelectorEvent.notifyDrag() = _NotifyDrag;
   const factory BoardSelectorEvent.endDragging() = _EndDragging;
 }
 

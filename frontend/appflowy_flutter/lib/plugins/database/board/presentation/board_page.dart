@@ -176,18 +176,35 @@ class _DesktopBoardContentState extends State<DesktopBoardContent> {
       child: Builder(
         builder: (context) {
           return GestureDetector(
-            onPanStart: (details) => context
-                .read<BoardSelectorBloc>()
-                .add(BoardSelectorEvent.startDragging(details.localPosition)),
+            onPanStart: (details) {
+              setState(() {
+                isDragging = true;
+                startPos = details.localPosition;
+                currentPos = details.localPosition;
+              });
+
+              // The BLoC is used to evaluate which cards to focus,
+              // we have decoupled it from the UI to make it easier to optimize
+              // performance.
+              //
+              context
+                  .read<BoardSelectorBloc>()
+                  .add(BoardSelectorEvent.startDragging(details.localPosition));
+            },
             onPanUpdate: (details) {
-              debugPrint("onPanUpdate: ${details.localPosition}");
+              setState(() => currentPos = details.localPosition);
+
               context
                   .read<BoardSelectorBloc>()
                   .add(BoardSelectorEvent.addDrag(details.localPosition));
             },
-            onPanEnd: (_) => context
-                .read<BoardSelectorBloc>()
-                .add(const BoardSelectorEvent.endDragging()),
+            onPanEnd: (_) {
+              setState(() => isDragging = false);
+
+              context
+                  .read<BoardSelectorBloc>()
+                  .add(const BoardSelectorEvent.endDragging());
+            },
             child: Stack(
               children: [
                 BlocConsumer<BoardBloc, BoardState>(
@@ -267,46 +284,32 @@ class _DesktopBoardContentState extends State<DesktopBoardContent> {
                     );
                   },
                 ),
-                BlocBuilder<BoardSelectorBloc, BoardSelectorState>(
-                  builder: (context, state) {
-                    final isDragging = state.isDragging;
-
-                    if (!isDragging ||
-                        state.startPosition == null ||
-                        state.endPosition == null) {
-                      return const SizedBox.shrink();
-                    }
-
-                    final startPos = state.startPosition!;
-                    final currentPos = state.endPosition!;
-
-                    return Positioned(
-                      left: startPos.dx < currentPos.dx
-                          ? startPos.dx
-                          : currentPos.dx,
-                      top: startPos.dy < currentPos.dy
-                          ? startPos.dy
-                          : currentPos.dy,
-                      width: (startPos.dx < currentPos.dx
-                              ? currentPos.dx - startPos.dx
-                              : startPos.dx - currentPos.dx)
-                          .abs(),
-                      height: (startPos.dy < currentPos.dy
-                              ? currentPos.dy - startPos.dy
-                              : startPos.dy - currentPos.dy)
-                          .abs(),
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
+                if (isDragging)
+                  Positioned(
+                    left: startPos.dx < currentPos.dx
+                        ? startPos.dx
+                        : currentPos.dx,
+                    top: startPos.dy < currentPos.dy
+                        ? startPos.dy
+                        : currentPos.dy,
+                    width: (startPos.dx < currentPos.dx
+                            ? currentPos.dx - startPos.dx
+                            : startPos.dx - currentPos.dx)
+                        .abs(),
+                    height: (startPos.dy < currentPos.dy
+                            ? currentPos.dy - startPos.dy
+                            : startPos.dy - currentPos.dy)
+                        .abs(),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(2),
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  ),
               ],
             ),
           );
@@ -461,19 +464,37 @@ class _BoardCard extends StatelessWidget {
     return BlocListener<BoardSelectorBloc, BoardSelectorState>(
       listenWhen: (_, current) => current.isDragging,
       listener: (context, state) {
-        // Check if any part of the child widget is inside the selection area
-        // final isInsideSelectionArea = true;
-        // if (isInsideSelectionArea) {
-        // final groupData = afGroupData.customData as GroupData;
-        // notifier.focus(
-        //   [
-        //     GroupedRowId(
-        //       rowId: groupItem.row.id,
-        //       groupId: groupData.group.groupId,
-        //     ),
-        //   ],
-        // );
-        // }
+        final renderBox =
+            _cardKey.currentContext?.findRenderObject() as RenderBox?;
+        if (renderBox == null) return;
+
+        final Rect cardRect =
+            renderBox.localToGlobal(Offset.zero) & renderBox.size;
+        final selectionRect = Rect.fromPoints(
+          state.startPosition!,
+          state.endPosition!,
+        );
+
+        final groupData = afGroupData.customData as GroupData;
+        if (selectionRect.overlaps(cardRect)) {
+          notifier.focus(
+            [
+              GroupedRowId(
+                groupId: groupData.group.groupId,
+                rowId: groupItem.row.id,
+              ),
+            ],
+          );
+        } else {
+          notifier.unfocus(
+            [
+              GroupedRowId(
+                groupId: groupData.group.groupId,
+                rowId: groupItem.row.id,
+              ),
+            ],
+          );
+        }
       },
       child: BlocBuilder<BoardBloc, BoardState>(
         builder: (context, state) {
