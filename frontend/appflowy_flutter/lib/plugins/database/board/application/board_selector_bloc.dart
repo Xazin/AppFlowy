@@ -26,7 +26,7 @@ class BoardSelectorBloc extends Bloc<BoardSelectorEvent, BoardSelectorState> {
             (_) => _evaluateEmit,
           );
         },
-        addDrag: (Offset position) => _endOffset = _endOffset,
+        addDrag: (Offset position) => _endOffset = position,
         notifyDrag: () => emit(state.copyWith(endPosition: _endOffset)),
         endDragging: () {
           _timer?.cancel();
