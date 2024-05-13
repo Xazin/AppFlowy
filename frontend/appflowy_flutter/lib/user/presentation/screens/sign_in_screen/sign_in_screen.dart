@@ -11,9 +11,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../helpers/helpers.dart';
 
 class SignInScreen extends StatelessWidget {
-  const SignInScreen({
-    super.key,
-  });
+  const SignInScreen({super.key});
 
   static const routeName = '/SignInScreen';
 

@@ -5,6 +5,7 @@ import 'package:appflowy/plugins/blank/blank.dart';
 import 'package:appflowy/startup/plugin/plugin.dart';
 import 'package:appflowy/startup/startup.dart';
 import 'package:appflowy/startup/tasks/memory_leak_detector.dart';
+import 'package:appflowy/shared/window_title_bar.dart';
 import 'package:appflowy/user/application/auth/auth_service.dart';
 import 'package:appflowy/user/application/reminder/reminder_bloc.dart';
 import 'package:appflowy/workspace/application/favorite/favorite_bloc.dart';
@@ -25,6 +26,7 @@ import 'package:appflowy_backend/log.dart';
 import 'package:appflowy_backend/protobuf/flowy-folder/protobuf.dart';
 import 'package:appflowy_backend/protobuf/flowy-user/protobuf.dart'
     show UserProfilePB;
+import 'package:appflowy_editor/appflowy_editor.dart' hide Log;
 import 'package:flowy_infra_ui/style_widget/container.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sized_context/sized_context.dart';
@@ -115,17 +117,31 @@ class DesktopHomeScreen extends StatelessWidget {
               },
               child: BlocBuilder<HomeSettingBloc, HomeSettingState>(
                 buildWhen: (previous, current) => previous != current,
-                builder: (context, state) => BlocProvider(
-                  create: (_) => UserWorkspaceBloc(userProfile: userProfile)
-                    ..add(const UserWorkspaceEvent.initial()),
-                  child: HomeHotKeys(
-                    userProfile: userProfile,
-                    child: FlowyContainer(
-                      Theme.of(context).colorScheme.surface,
-                      child: _buildBody(context, userProfile, workspaceSetting),
+                builder: (context, state) {
+                  final child = BlocProvider(
+                    create: (_) => UserWorkspaceBloc(userProfile: userProfile)
+                      ..add(const UserWorkspaceEvent.initial()),
+                    child: HomeHotKeys(
+                      userProfile: userProfile,
+                      child: FlowyContainer(
+                        Theme.of(context).colorScheme.surface,
+                        child:
+                            _buildBody(context, userProfile, workspaceSetting),
+                      ),
                     ),
-                  ),
-                ),
+                  );
+
+                  if (PlatformExtension.isLinux) {
+                    return Column(
+                      children: [
+                        const WindowTitleBar(),
+                        Expanded(child: child),
+                      ],
+                    );
+                  }
+
+                  return child;
+                },
               ),
             ),
           ),

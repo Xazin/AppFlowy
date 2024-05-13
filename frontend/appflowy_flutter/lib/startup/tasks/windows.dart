@@ -11,9 +11,7 @@ import 'package:scaled_app/scaled_app.dart';
 import 'package:window_manager/window_manager.dart';
 
 class InitAppWindowTask extends LaunchTask with WindowListener {
-  InitAppWindowTask({
-    this.title = 'AppFlowy',
-  });
+  InitAppWindowTask({this.title = 'AppFlowy'});
 
   final String title;
 
@@ -31,6 +29,7 @@ class InitAppWindowTask extends LaunchTask with WindowListener {
 
     final windowSize = await windowsManager.getSize();
     final windowOptions = WindowOptions(
+      title: title,
       size: windowSize,
       minimumSize: const Size(
         WindowSizeManager.minWindowWidth,
@@ -40,15 +39,14 @@ class InitAppWindowTask extends LaunchTask with WindowListener {
         WindowSizeManager.maxWindowWidth,
         WindowSizeManager.maxWindowHeight,
       ),
-      title: title,
     );
 
     await windowManager.waitUntilReadyToShow(windowOptions, () async {
       await windowManager.show();
       await windowManager.focus();
 
-      if (PlatformExtension.isWindows) {
-        // Hide title bar on Windows, we implement a custom solution elsewhere
+      if (PlatformExtension.isWindows || PlatformExtension.isLinux) {
+        // Hide title bar on Windows & Linux, we implement a custom solution elsewhere
         await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
       }
 
