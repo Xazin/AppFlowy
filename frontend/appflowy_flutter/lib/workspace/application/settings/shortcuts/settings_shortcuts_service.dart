@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:appflowy/plugins/document/presentation/editor_page.dart';
 import 'package:appflowy/startup/startup.dart';
 import 'package:appflowy/workspace/application/settings/application_data_storage.dart';
+import 'package:appflowy/workspace/application/settings/shortcuts/shortcuts.dart';
 import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:collection/collection.dart';
 import 'package:path/path.dart' as p;
@@ -12,13 +12,12 @@ import 'package:path/path.dart' as p;
 import 'shortcuts_model.dart';
 
 class SettingsShortcutService {
-  /// If file is non null then the SettingsShortcutService uses that
-  /// file to store all the shortcuts, otherwise uses the default
-  /// Document Directory.
+  /// If file is non-null then the SettingsShortcutService uses that file
+  /// to store all the shortcuts, otherwise uses the default Document Directory.
+  ///
   /// Typically we only intend to pass a file during testing.
-  SettingsShortcutService({
-    File? file,
-  }) {
+  ///
+  SettingsShortcutService({File? file}) {
     _initializeService(file);
   }
 
@@ -27,14 +26,12 @@ class SettingsShortcutService {
 
   /// Takes in commandShortcuts as an input and saves them to the shortcuts.JSON file.
   Future<void> saveAllShortcuts(
-    List<CommandShortcutEvent> commandShortcuts,
+    List<ShortcutGroup> shortcutGroups,
   ) async {
-    final shortcuts = EditorShortcuts(
-      commandShortcuts: commandShortcuts.toCommandShortcutModelList(),
-    );
+    final List<CommandShortcutModel> shortcutModels = [];
 
     await _file.writeAsString(
-      jsonEncode(shortcuts.toJson()),
+      jsonEncode(EditorShortcuts(commandShortcuts: shortcutModels).toJson()),
       flush: true,
     );
   }
@@ -74,7 +71,7 @@ class SettingsShortcutService {
 
   Future<void> resetToDefaultShortcuts() async {
     await _initCompleter.future;
-    await saveAllShortcuts(defaultCommandShortcutEvents);
+    await saveAllShortcuts([]);
   }
 
   // Accesses the shortcuts.json file within the default AppFlowy Document Directory or creates a new file if it already doesn't exist.
@@ -92,10 +89,10 @@ class SettingsShortcutService {
   }
 }
 
-extension on List<CommandShortcutEvent> {
-  /// Utility method for converting a CommandShortcutEvent List to a
-  /// CommandShortcutModal List. This is necessary for creating shortcuts
-  /// object, which is used for saving the shortcuts list.
-  List<CommandShortcutModel> toCommandShortcutModelList() =>
-      map((e) => CommandShortcutModel.fromCommandEvent(e)).toList();
+extension ToGroupedModel on List<CommandShortcutEvent> {
+  List<CommandShortcutModel> toGroupedList(ShortcutGroup group) {
+    return map(
+      (shortcut) => CommandShortcutModel.fromCommandEvent(shortcut),
+    ).toList();
+  }
 }

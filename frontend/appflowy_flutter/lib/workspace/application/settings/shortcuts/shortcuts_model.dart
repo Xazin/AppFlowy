@@ -1,4 +1,5 @@
 import 'package:appflowy_editor/appflowy_editor.dart';
+import 'package:equatable/equatable.dart';
 
 class EditorShortcuts {
   factory EditorShortcuts.fromJson(Map<String, dynamic> json) =>
@@ -18,7 +19,7 @@ class EditorShortcuts {
       };
 }
 
-class CommandShortcutModel {
+class CommandShortcutModel extends Equatable {
   factory CommandShortcutModel.fromCommandEvent(
     CommandShortcutEvent commandShortcutEvent,
   ) =>
@@ -33,20 +34,19 @@ class CommandShortcutModel {
         command: json["command"] ?? '',
       );
 
-  const CommandShortcutModel({required this.key, required this.command});
+  const CommandShortcutModel({
+    required this.key,
+    required this.command,
+  });
 
   final String key;
   final String command;
 
-  Map<String, dynamic> toJson() => {"key": key, "command": command};
+  Map<String, dynamic> toJson() => {
+        "key": key,
+        "command": command,
+      };
 
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is CommandShortcutModel &&
-          key == other.key &&
-          command == other.command;
-
-  @override
-  int get hashCode => key.hashCode ^ command.hashCode;
+  List<Object?> get props => [key, command];
 }

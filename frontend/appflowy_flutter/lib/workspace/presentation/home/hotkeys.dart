@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:flutter/material.dart';
+
 import 'package:appflowy/startup/startup.dart';
 import 'package:appflowy/startup/tasks/app_window_size_manager.dart';
 import 'package:appflowy/workspace/application/home/home_setting_bloc.dart';
@@ -9,7 +11,7 @@ import 'package:appflowy/workspace/application/tabs/tabs_bloc.dart';
 import 'package:appflowy/workspace/presentation/home/menu/sidebar/shared/sidebar_setting.dart';
 import 'package:appflowy_backend/log.dart';
 import 'package:appflowy_backend/protobuf/flowy-user/user_profile.pb.dart';
-import 'package:flutter/material.dart';
+import 'package:collection/collection.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:scaled_app/scaled_app.dart';
@@ -34,6 +36,13 @@ class HotKeyItem {
 
   void register() =>
       hotKeyManager.register(hotKey, keyDownHandler: keyDownHandler);
+
+  void unregister() => hotKeyManager.unregister(hotKey);
+
+  HotKeyItem copyWith(HotKey? hotKey) => HotKeyItem(
+        hotKey: hotKey ?? this.hotKey,
+        keyDownHandler: keyDownHandler,
+      );
 }
 
 class HomeHotKeys extends StatefulWidget {
@@ -61,6 +70,7 @@ class _HomeHotKeysState extends State<HomeHotKeys> {
         modifiers: [Platform.isMacOS ? KeyModifier.meta : KeyModifier.control],
         // Set hotkey scope (default is HotKeyScope.system)
         scope: HotKeyScope.inapp, // Set as inapp-wide hotkey.
+        identifier: 'collapse-sidebar-menu-backslash',
       ),
       keyDownHandler: (_) => context
           .read<HomeSettingBloc>()
@@ -76,6 +86,7 @@ class _HomeHotKeysState extends State<HomeHotKeys> {
           KeyModifier.shift,
         ],
         scope: HotKeyScope.inapp,
+        identifier: 'toggle-theme-mode',
       ),
       keyDownHandler: (_) =>
           context.read<AppearanceSettingsCubit>().toggleThemeMode(),
@@ -87,6 +98,7 @@ class _HomeHotKeysState extends State<HomeHotKeys> {
         KeyCode.keyW,
         modifiers: [Platform.isMacOS ? KeyModifier.meta : KeyModifier.control],
         scope: HotKeyScope.inapp,
+        identifier: 'close-current-tab',
       ),
       keyDownHandler: (_) =>
           context.read<TabsBloc>().add(const TabsEvent.closeCurrentTab()),
@@ -98,6 +110,7 @@ class _HomeHotKeysState extends State<HomeHotKeys> {
         KeyCode.pageUp,
         modifiers: [Platform.isMacOS ? KeyModifier.meta : KeyModifier.control],
         scope: HotKeyScope.inapp,
+        identifier: 'navigate-previous-tab',
       ),
       keyDownHandler: (_) => _selectTab(context, -1),
     ),
@@ -108,6 +121,7 @@ class _HomeHotKeysState extends State<HomeHotKeys> {
         KeyCode.pageDown,
         modifiers: [Platform.isMacOS ? KeyModifier.meta : KeyModifier.control],
         scope: HotKeyScope.inapp,
+        identifier: 'navigate-next-tab',
       ),
       keyDownHandler: (_) => _selectTab(context, 1),
     ),
@@ -117,6 +131,7 @@ class _HomeHotKeysState extends State<HomeHotKeys> {
       hotKey: HotKey(
         KeyCode.f2,
         scope: HotKeyScope.inapp,
+        identifier: 'rename-current-view',
       ),
       keyDownHandler: (_) =>
           getIt<RenameViewBloc>().add(const RenameViewEvent.open()),
@@ -128,6 +143,7 @@ class _HomeHotKeysState extends State<HomeHotKeys> {
         KeyCode.equal,
         modifiers: [Platform.isMacOS ? KeyModifier.meta : KeyModifier.control],
         scope: HotKeyScope.inapp,
+        identifier: 'scale-application-up',
       ),
       keyDownHandler: (_) => _scaleWithStep(0.1),
     ),
@@ -137,6 +153,7 @@ class _HomeHotKeysState extends State<HomeHotKeys> {
         KeyCode.minus,
         modifiers: [Platform.isMacOS ? KeyModifier.meta : KeyModifier.control],
         scope: HotKeyScope.inapp,
+        identifier: 'scale-application-down',
       ),
       keyDownHandler: (_) => _scaleWithStep(-0.1),
     ),
@@ -147,6 +164,7 @@ class _HomeHotKeysState extends State<HomeHotKeys> {
         KeyCode.digit0,
         modifiers: [Platform.isMacOS ? KeyModifier.meta : KeyModifier.control],
         scope: HotKeyScope.inapp,
+        identifier: 'reset-application-scaling',
       ),
       keyDownHandler: (_) => _scaleToSize(1),
     ),
@@ -171,6 +189,32 @@ class _HomeHotKeysState extends State<HomeHotKeys> {
 
   @override
   Widget build(BuildContext context) => widget.child;
+
+  void updateHotkey(
+    String identifier, {
+    KeyCode? keyCode,
+    List<KeyModifier>? modifiers,
+  }) {
+    final hotKeyItem =
+        items.firstWhereOrNull((item) => item.hotKey.identifier == identifier);
+    if (hotKeyItem == null) {
+      return;
+    }
+
+    hotKeyManager.unregister(hotKeyItem.hotKey);
+    final newItem = hotKeyItem.copyWith(
+      HotKey(
+        identifier: identifier,
+        keyCode ?? hotKeyItem.hotKey.keyCode,
+        modifiers: modifiers,
+      ),
+    );
+
+    items.remove(hotKeyItem);
+    items.add(newItem);
+
+    newItem.register();
+  }
 
   void _registerHotKeys(BuildContext context) {
     for (final element in items) {

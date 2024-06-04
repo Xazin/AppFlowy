@@ -1,6 +1,7 @@
 import 'package:appflowy/generated/locale_keys.g.dart';
 import 'package:appflowy/plugins/document/presentation/editor_page.dart';
 import 'package:appflowy/workspace/application/settings/shortcuts/settings_shortcuts_service.dart';
+import 'package:appflowy/workspace/application/settings/shortcuts/shortcuts_model.dart';
 import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,7 +13,7 @@ part 'settings_shortcuts_cubit.freezed.dart';
 class ShortcutsState with _$ShortcutsState {
   const factory ShortcutsState({
     @Default(<CommandShortcutEvent>[])
-    List<CommandShortcutEvent> commandShortcutEvents,
+    Map<ShortcutGroup, List<CommandShortcutModel>> commandShortcutModels,
     @Default(ShortcutsStatus.initial) ShortcutsStatus status,
     @Default('') String error,
   }) = _ShortcutsState;
@@ -21,7 +22,10 @@ class ShortcutsState with _$ShortcutsState {
 enum ShortcutsStatus { initial, updating, success, failure }
 
 class ShortcutsCubit extends Cubit<ShortcutsState> {
-  ShortcutsCubit(this.service) : super(const ShortcutsState());
+  ShortcutsCubit(this.service)
+      : super(
+          const ShortcutsState(commandShortcutModels: {}),
+        );
 
   final SettingsShortcutService service;
 
@@ -36,19 +40,19 @@ class ShortcutsCubit extends Cubit<ShortcutsState> {
     try {
       final customizeShortcuts = await service.getCustomizeShortcuts();
       await service.updateCommandShortcuts(
-        commandShortcutEvents,
+        defaultCommandShortcutEvents,
         customizeShortcuts,
       );
 
       //sort the shortcuts
-      commandShortcutEvents.sort(
+      defaultCommandShortcutEvents.sort(
         (a, b) => a.key.toLowerCase().compareTo(b.key.toLowerCase()),
       );
 
       emit(
         state.copyWith(
           status: ShortcutsStatus.success,
-          commandShortcutEvents: commandShortcutEvents,
+          commandShortcutModels: groupedCommandShortcutEvents,
           error: '',
         ),
       );
@@ -70,7 +74,7 @@ class ShortcutsCubit extends Cubit<ShortcutsState> {
       ),
     );
     try {
-      await service.saveAllShortcuts(state.commandShortcutEvents);
+      await service.saveAllShortcuts(state.commandShortcuts);
       emit(
         state.copyWith(
           status: ShortcutsStatus.success,
@@ -95,7 +99,7 @@ class ShortcutsCubit extends Cubit<ShortcutsState> {
       ),
     );
     try {
-      await service.saveAllShortcuts(defaultCommandShortcutEvents);
+      await service.saveAllShortcuts(groupedCommandShortcutEvents);
       await fetchShortcuts();
     } catch (e) {
       emit(
