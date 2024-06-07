@@ -199,6 +199,14 @@ dependency_overrides:
       commit: fbab857b1b1d209240a146d32f496379b9f62276
       path: flutter_cache_manager
 
+  # Originally from appflowy_editor_plugins
+  # Publishable packages cannot contain git dependencies
+  media_kit_video:
+    git:
+      url: https://github.com/media-kit/media-kit
+      path: media_kit_video/
+      ref: ff00dae2b9bb6e66cdf15a7ecc1f99d0b7d6e3b4
+
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
