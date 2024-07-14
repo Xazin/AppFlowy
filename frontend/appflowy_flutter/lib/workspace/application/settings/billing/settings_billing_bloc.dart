@@ -28,7 +28,7 @@ class SettingsBillingBloc
     required this.workspaceId,
     required Int64 userId,
   }) : super(const _Initial()) {
-    _userService = UserBackendService(userId: userId);
+    _userService = getIt<UserBackendService>(param1: userId);
     _service = WorkspaceService(workspaceId: workspaceId);
     _successListenable = getIt<SubscriptionSuccessListenable>();
     _successListenable.addListener(_onPaymentSuccessful);

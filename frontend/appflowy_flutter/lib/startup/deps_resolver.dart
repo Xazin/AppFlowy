@@ -32,13 +32,13 @@ import 'package:appflowy/workspace/application/subscription_success_listenable/s
 import 'package:appflowy/workspace/application/tabs/tabs_bloc.dart';
 import 'package:appflowy/workspace/application/user/prelude.dart';
 import 'package:appflowy/workspace/application/view/prelude.dart';
-import 'package:appflowy/workspace/application/workspace/prelude.dart';
 import 'package:appflowy/workspace/presentation/home/menu/menu_shared_state.dart';
 import 'package:appflowy_backend/log.dart';
 import 'package:appflowy_backend/protobuf/flowy-folder/view.pb.dart';
 import 'package:appflowy_backend/protobuf/flowy-user/protobuf.dart';
 import 'package:appflowy_editor/appflowy_editor.dart' hide Log;
 import 'package:appflowy_popover/appflowy_popover.dart';
+import 'package:fixnum/fixnum.dart';
 import 'package:flowy_infra/file_picker/file_picker_impl.dart';
 import 'package:flowy_infra/file_picker/file_picker_service.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -117,9 +117,7 @@ void _resolveCommonService(
     },
   );
 
-  getIt.registerFactory<ClipboardService>(
-    () => ClipboardService(),
-  );
+  getIt.registerFactory<ClipboardService>(() => ClipboardService());
 
   // theme
   getIt.registerFactory<BaseAppearance>(
@@ -170,6 +168,10 @@ void _resolveUserDeps(GetIt getIt, IntegrationMode mode) {
   getIt.registerLazySingleton<SubscriptionSuccessListenable>(
     () => SubscriptionSuccessListenable(),
   );
+
+  getIt.registerFactoryParam<UserBackendService, Int64, void>(
+    (userId, _) => UserBackendService(userId: userId),
+  );
 }
 
 void _resolveHomeDeps(GetIt getIt) {
@@ -196,16 +198,8 @@ void _resolveHomeDeps(GetIt getIt) {
 }
 
 void _resolveFolderDeps(GetIt getIt) {
-  // Workspace
-  getIt.registerFactoryParam<WorkspaceListener, UserProfilePB, String>(
-    (user, workspaceId) =>
-        WorkspaceListener(user: user, workspaceId: workspaceId),
-  );
-
   getIt.registerFactoryParam<ViewBloc, ViewPB, void>(
-    (view, _) => ViewBloc(
-      view: view,
-    ),
+    (view, _) => ViewBloc(view: view),
   );
 
   // Settings
@@ -221,9 +215,7 @@ void _resolveFolderDeps(GetIt getIt) {
   // Trash
   getIt.registerLazySingleton<TrashService>(() => TrashService());
   getIt.registerLazySingleton<TrashListener>(() => TrashListener());
-  getIt.registerFactory<TrashBloc>(
-    () => TrashBloc(),
-  );
+  getIt.registerFactory<TrashBloc>(() => TrashBloc());
 
   // Favorite
   getIt.registerFactory<FavoriteBloc>(() => FavoriteBloc());
