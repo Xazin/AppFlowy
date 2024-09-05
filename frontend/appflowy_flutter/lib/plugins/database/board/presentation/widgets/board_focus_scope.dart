@@ -1,7 +1,8 @@
+import 'package:flutter/foundation.dart';
+
 import 'package:appflowy/plugins/database/board/application/board_bloc.dart';
 import 'package:appflowy_board/appflowy_board.dart';
 import 'package:collection/collection.dart';
-import 'package:flutter/foundation.dart';
 
 class BoardFocusScope extends ChangeNotifier
     implements ValueListenable<List<GroupedRowId>> {
@@ -336,6 +337,20 @@ class BoardFocusScope extends ChangeNotifier
     notifyListeners();
 
     return true;
+  }
+
+  void focus(GroupedRowId groupedRowId) {
+    _deepCopy();
+    _focusedCards.add(groupedRowId);
+    notifyListeners();
+  }
+
+  void unfocus(GroupedRowId groupedRowId) {
+    _deepCopy();
+    final didChange = _focusedCards.remove(groupedRowId);
+    if (didChange) {
+      notifyListeners();
+    }
   }
 
   bool clear() {

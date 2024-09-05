@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:appflowy/generated/flowy_svgs.g.dart';
 import 'package:appflowy/generated/locale_keys.g.dart';
 import 'package:appflowy/mobile/presentation/database/board/mobile_board_page.dart';
+import 'package:appflowy/plugins/database/application/board_selector_bloc.dart';
 import 'package:appflowy/plugins/database/application/database_controller.dart';
 import 'package:appflowy/plugins/database/application/row/row_controller.dart';
 import 'package:appflowy/plugins/database/board/application/board_actions_bloc.dart';
@@ -157,6 +158,7 @@ class _DesktopBoardPageState extends State<DesktopBoardPage> {
     boardController: _boardController,
   );
   late final BoardBloc _boardBloc;
+  late final BoardSelectorBloc _boardSelectorBloc;
   late final BoardActionsCubit _boardActionsCubit;
   late final ValueNotifier<DidCreateRowResult?> _didCreateRow;
 
@@ -172,6 +174,7 @@ class _DesktopBoardPageState extends State<DesktopBoardPage> {
     _boardActionsCubit = BoardActionsCubit(
       databaseController: widget.databaseController,
     );
+    _boardSelectorBloc = BoardSelectorBloc();
   }
 
   @override
@@ -179,6 +182,7 @@ class _DesktopBoardPageState extends State<DesktopBoardPage> {
     _focusScope.dispose();
     _boardBloc.close();
     _boardActionsCubit.close();
+    _boardSelectorBloc.close();
     _didCreateRow
       ..removeListener(_handleDidCreateRow)
       ..dispose();
@@ -189,6 +193,9 @@ class _DesktopBoardPageState extends State<DesktopBoardPage> {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider<BoardSelectorBloc>.value(
+          value: _boardSelectorBloc,
+        ),
         BlocProvider<BoardBloc>.value(
           value: _boardBloc,
         ),
@@ -275,6 +282,10 @@ class _BoardContentState extends State<_BoardContent> {
   DatabaseController get databaseController =>
       context.read<BoardBloc>().databaseController;
 
+  bool isDragging = false;
+  Offset startPos = Offset.zero;
+  Offset currentPos = Offset.zero;
+
   @override
   void dispose() {
     scrollController.dispose();
@@ -283,106 +294,178 @@ class _BoardContentState extends State<_BoardContent> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocListener(
-      listeners: [
-        BlocListener<BoardBloc, BoardState>(
-          listener: (context, state) {
-            state.maybeMap(
-              ready: (value) {
-                widget.onEditStateChanged?.call();
-              },
-              orElse: () {},
-            );
-          },
-        ),
-        BlocListener<BoardActionsCubit, BoardActionsState>(
-          listener: (context, state) {
-            state.maybeMap(
-              openCard: (value) {
-                _openCard(
-                  context: context,
-                  databaseController:
-                      context.read<BoardBloc>().databaseController,
-                  rowMeta: value.rowMeta,
-                );
-              },
-              setFocus: (value) {
-                widget.focusScope.focusedGroupedRows = value.groupedRowIds;
-              },
-              startEditingRow: (value) {
-                widget.boardController.enableGroupDragging(false);
-                widget.focusScope.clear();
-              },
-              endEditingRow: (value) {
-                widget.boardController.enableGroupDragging(true);
-              },
-              orElse: () {},
-            );
-          },
-        ),
-      ],
-      child: FocusScope(
-        autofocus: true,
-        child: BoardShortcutContainer(
-          focusScope: widget.focusScope,
-          child: Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: AppFlowyBoard(
-              boardScrollController: scrollManager,
-              scrollController: scrollController,
-              controller: context.read<BoardBloc>().boardController,
-              groupConstraints: const BoxConstraints.tightFor(width: 256),
-              config: config,
-              leading: HiddenGroupsColumn(margin: config.groupHeaderPadding),
-              trailing: context
-                          .read<BoardBloc>()
-                          .groupingFieldType
-                          ?.canCreateNewGroup ??
-                      false
-                  ? BoardTrailing(scrollController: scrollController)
-                  : const HSpace(40),
-              headerBuilder: (_, groupData) => BlocProvider<BoardBloc>.value(
-                value: context.read<BoardBloc>(),
-                child: BoardColumnHeader(
-                  groupData: groupData,
-                  margin: config.groupHeaderPadding,
+    return BlocProvider<BoardSelectorBloc>.value(
+      value: context.read<BoardSelectorBloc>(),
+      child: GestureDetector(
+        onPanStart: (details) {
+          setState(() {
+            isDragging = true;
+            startPos = details.localPosition;
+            currentPos = details.localPosition;
+          });
+          context
+              .read<BoardSelectorBloc>()
+              .add(BoardSelectorEvent.startDragging(details.localPosition));
+        },
+        onPanUpdate: (details) {
+          setState(() => currentPos = details.localPosition);
+
+          context
+              .read<BoardSelectorBloc>()
+              .add(BoardSelectorEvent.addDrag(details.localPosition));
+        },
+        onPanEnd: (_) {
+          setState(() => isDragging = false);
+
+          context
+              .read<BoardSelectorBloc>()
+              .add(const BoardSelectorEvent.endDragging());
+        },
+        child: Stack(
+          children: [
+            MultiBlocListener(
+              listeners: [
+                BlocListener<BoardBloc, BoardState>(
+                  listener: (context, state) {
+                    state.maybeMap(
+                      ready: (value) {
+                        widget.onEditStateChanged?.call();
+                      },
+                      orElse: () {},
+                    );
+                  },
                 ),
-              ),
-              footerBuilder: (_, groupData) => MultiBlocProvider(
-                providers: [
-                  BlocProvider.value(
-                    value: context.read<BoardBloc>(),
-                  ),
-                  BlocProvider.value(
-                    value: context.read<BoardActionsCubit>(),
-                  ),
-                ],
-                child: BoardColumnFooter(
-                  columnData: groupData,
-                  boardConfig: config,
-                  scrollManager: scrollManager,
+                BlocListener<BoardActionsCubit, BoardActionsState>(
+                  listener: (context, state) {
+                    state.maybeMap(
+                      openCard: (value) {
+                        _openCard(
+                          context: context,
+                          databaseController:
+                              context.read<BoardBloc>().databaseController,
+                          rowMeta: value.rowMeta,
+                        );
+                      },
+                      setFocus: (value) {
+                        widget.focusScope.focusedGroupedRows =
+                            value.groupedRowIds;
+                      },
+                      startEditingRow: (value) {
+                        widget.boardController.enableGroupDragging(false);
+                        widget.focusScope.clear();
+                      },
+                      endEditingRow: (value) {
+                        widget.boardController.enableGroupDragging(true);
+                      },
+                      orElse: () {},
+                    );
+                  },
                 ),
-              ),
-              cardBuilder: (_, column, columnItem) => MultiBlocProvider(
-                key: ValueKey("board_card_${column.id}_${columnItem.id}"),
-                providers: [
-                  BlocProvider<BoardBloc>.value(
-                    value: context.read<BoardBloc>(),
+              ],
+              child: FocusScope(
+                autofocus: true,
+                child: BoardShortcutContainer(
+                  focusScope: widget.focusScope,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: AppFlowyBoard(
+                      boardScrollController: scrollManager,
+                      scrollController: scrollController,
+                      controller: context.read<BoardBloc>().boardController,
+                      groupConstraints:
+                          const BoxConstraints.tightFor(width: 256),
+                      config: config,
+                      leading:
+                          HiddenGroupsColumn(margin: config.groupHeaderPadding),
+                      trailing: context
+                                  .read<BoardBloc>()
+                                  .groupingFieldType
+                                  ?.canCreateNewGroup ??
+                              false
+                          ? BoardTrailing(scrollController: scrollController)
+                          : const HSpace(40),
+                      headerBuilder: (_, groupData) =>
+                          BlocProvider<BoardBloc>.value(
+                        value: context.read<BoardBloc>(),
+                        child: BoardColumnHeader(
+                          groupData: groupData,
+                          margin: config.groupHeaderPadding,
+                        ),
+                      ),
+                      footerBuilder: (_, groupData) => MultiBlocProvider(
+                        providers: [
+                          BlocProvider.value(
+                            value: context.read<BoardBloc>(),
+                          ),
+                          BlocProvider.value(
+                            value: context.read<BoardActionsCubit>(),
+                          ),
+                        ],
+                        child: BoardColumnFooter(
+                          columnData: groupData,
+                          boardConfig: config,
+                          scrollManager: scrollManager,
+                        ),
+                      ),
+                      cardBuilder: (_, column, columnItem) => MultiBlocProvider(
+                        key: ValueKey(
+                          "board_card_${column.id}_${columnItem.id}",
+                        ),
+                        providers: [
+                          BlocProvider<BoardSelectorBloc>.value(
+                            value: context.read<BoardSelectorBloc>(),
+                          ),
+                          BlocProvider<BoardBloc>.value(
+                            value: context.read<BoardBloc>(),
+                          ),
+                          BlocProvider.value(
+                            value: context.read<BoardActionsCubit>(),
+                          ),
+                        ],
+                        child: _BoardCard(
+                          afGroupData: column,
+                          groupItem: columnItem as GroupItem,
+                          boardConfig: config,
+                          notifier: widget.focusScope,
+                          cellBuilder: cellBuilder,
+                        ),
+                      ),
+                    ),
                   ),
-                  BlocProvider.value(
-                    value: context.read<BoardActionsCubit>(),
-                  ),
-                ],
-                child: _BoardCard(
-                  afGroupData: column,
-                  groupItem: columnItem as GroupItem,
-                  boardConfig: config,
-                  notifier: widget.focusScope,
-                  cellBuilder: cellBuilder,
                 ),
               ),
             ),
-          ),
+            if (isDragging)
+              BlocBuilder<BoardSelectorBloc, BoardSelectorState>(
+                builder: (context, state) {
+                  return Positioned(
+                    left: startPos.dx < currentPos.dx
+                        ? startPos.dx
+                        : currentPos.dx,
+                    top: startPos.dy < currentPos.dy
+                        ? startPos.dy
+                        : currentPos.dy,
+                    width: (startPos.dx < currentPos.dx
+                            ? currentPos.dx - startPos.dx
+                            : startPos.dx - currentPos.dx)
+                        .abs(),
+                    height: (startPos.dy < currentPos.dy
+                            ? currentPos.dy - startPos.dy
+                            : startPos.dy - currentPos.dy)
+                        .abs(),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  );
+                },
+              ),
+          ],
         ),
       ),
     );
@@ -555,6 +638,8 @@ class _BoardCard extends StatefulWidget {
 class _BoardCardState extends State<_BoardCard> {
   bool _isEditing = false;
 
+  final _cardKey = GlobalKey(debugLabel: 'board_card');
+
   @override
   Widget build(BuildContext context) {
     final boardBloc = context.read<BoardBloc>();
@@ -566,39 +651,77 @@ class _BoardCardState extends State<_BoardCard> {
 
     const nada = DoNothingAndStopPropagationIntent();
 
-    return BlocListener<BoardActionsCubit, BoardActionsState>(
-      listener: (context, state) {
-        state.maybeMap(
-          startEditingRow: (value) {
-            if (value.groupedRowId.rowId == widget.groupItem.id &&
-                value.groupedRowId.groupId == groupData.group.groupId) {
-              setState(() => _isEditing = true);
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<BoardSelectorBloc, BoardSelectorState>(
+          listener: (context, state) {
+            final renderBox =
+                _cardKey.currentContext?.findRenderObject() as RenderBox?;
+            if (renderBox == null) return;
+
+            final Rect cardRect =
+                renderBox.localToGlobal(Offset.zero) & renderBox.size;
+
+            final selectionRect = Rect.fromPoints(
+              state.startPosition!,
+              state.endPosition!,
+            );
+
+            final groupData = widget.afGroupData.customData as GroupData;
+            if (selectionRect.overlaps(cardRect)) {
+              widget.notifier.focus(
+                GroupedRowId(
+                  groupId: groupData.group.groupId,
+                  rowId: widget.groupItem.row.id,
+                ),
+              );
+            } else {
+              widget.notifier.unfocus(
+                GroupedRowId(
+                  groupId: groupData.group.groupId,
+                  rowId: widget.groupItem.row.id,
+                ),
+              );
             }
           },
-          endEditingRow: (_) {
-            if (_isEditing) {
-              setState(() => _isEditing = false);
-            }
+        ),
+        BlocListener<BoardActionsCubit, BoardActionsState>(
+          listener: (context, state) {
+            state.maybeMap(
+              startEditingRow: (value) {
+                if (value.groupedRowId.rowId == widget.groupItem.id &&
+                    value.groupedRowId.groupId == groupData.group.groupId) {
+                  setState(() => _isEditing = true);
+                }
+              },
+              endEditingRow: (_) {
+                if (_isEditing) {
+                  setState(() => _isEditing = false);
+                }
+              },
+              createRow: (value) {
+                if ((_isEditing && value.groupedRowId == null) ||
+                    (value.groupedRowId?.rowId == widget.groupItem.id &&
+                        value.groupedRowId?.groupId ==
+                            groupData.group.groupId)) {
+                  context.read<BoardBloc>().add(
+                        BoardEvent.createRow(
+                          groupData.group.groupId,
+                          value.position ==
+                                  CreateBoardCardRelativePosition.before
+                              ? OrderObjectPositionTypePB.Before
+                              : OrderObjectPositionTypePB.After,
+                          null,
+                          widget.groupItem.row.id,
+                        ),
+                      );
+                }
+              },
+              orElse: () {},
+            );
           },
-          createRow: (value) {
-            if ((_isEditing && value.groupedRowId == null) ||
-                (value.groupedRowId?.rowId == widget.groupItem.id &&
-                    value.groupedRowId?.groupId == groupData.group.groupId)) {
-              context.read<BoardBloc>().add(
-                    BoardEvent.createRow(
-                      groupData.group.groupId,
-                      value.position == CreateBoardCardRelativePosition.before
-                          ? OrderObjectPositionTypePB.Before
-                          : OrderObjectPositionTypePB.After,
-                      null,
-                      widget.groupItem.row.id,
-                    ),
-                  );
-            }
-          },
-          orElse: () {},
-        );
-      },
+        ),
+      ],
       child: Shortcuts(
         shortcuts: {
           const SingleActivator(LogicalKeyboardKey.arrowUp): nada,
@@ -643,6 +766,7 @@ class _BoardCardState extends State<_BoardCard> {
             child: child,
           ),
           child: RowCard(
+            key: _cardKey,
             fieldController: databaseController.fieldController,
             rowMeta: rowMeta,
             viewId: boardBloc.viewId,
