@@ -1,6 +1,9 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
+
 import 'package:appflowy/generated/locale_keys.g.dart';
+import 'package:appflowy/plugins/document/application/document_bloc.dart';
 import 'package:appflowy/plugins/document/presentation/editor_plugins/base/insert_page_command.dart';
 import 'package:appflowy/plugins/document/presentation/editor_plugins/mention/mention_block.dart';
 import 'package:appflowy/plugins/document/presentation/editor_plugins/mention/mention_page_block.dart';
@@ -19,7 +22,7 @@ import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flowy_infra_ui/flowy_infra_ui.dart';
 import 'package:flowy_infra_ui/widget/dialog/styled_dialogs.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 // const _channel = "InlinePageReference";
 
@@ -130,6 +133,17 @@ class InlinePageReferenceService extends InlineActionsDelegate {
           .take(limitResults)
           .map((view) => _fromView(view))
           .toList();
+
+      if (search.trim().isNotEmpty) {
+        items.insert(
+          0,
+          InlineActionsMenuItem(
+            label: 'Create \'$search\'',
+            onSelected: (context, editorState, menu, replace) =>
+                _onInsertChildPage(search, context, editorState, menu, replace),
+          ),
+        );
+      }
     } else {
       items = await _getRecentViews();
     }
@@ -216,6 +230,57 @@ class InlinePageReferenceService extends InlineActionsDelegate {
           MentionBlockKeys.mention: {
             MentionBlockKeys.type: MentionType.page.name,
             MentionBlockKeys.pageId: view.id,
+          },
+        },
+      );
+
+    await editorState.apply(transaction);
+  }
+
+  Future<void> _onInsertChildPage(
+    String name,
+    BuildContext context,
+    EditorState editorState,
+    InlineActionsMenuService menuService,
+    (int, int) replace,
+  ) async {
+    final selection = editorState.selection;
+    if (selection == null || !selection.isCollapsed) {
+      return;
+    }
+    final node = editorState.getNodeAtPath(selection.end.path);
+    if (node == null) {
+      return;
+    }
+
+    final parentViewId =
+        editorState.document.root.context?.read<DocumentBloc>().documentId;
+    if (parentViewId == null) {
+      return;
+    }
+
+    // Create view
+    final childView = await ViewBackendService.createView(
+      name: name,
+      parentViewId: parentViewId,
+      layoutType: ViewLayoutPB.Document,
+    ).then((value) => value.toNullable());
+
+    if (childView == null) {
+      return;
+    }
+
+    pageMemorizer[childView.id] = childView;
+    final transaction = editorState.transaction
+      ..replaceText(
+        node,
+        replace.$1,
+        replace.$2,
+        '\$',
+        attributes: {
+          MentionBlockKeys.mention: {
+            MentionBlockKeys.type: MentionType.childPage.name,
+            MentionBlockKeys.pageId: childView.id,
           },
         },
       );

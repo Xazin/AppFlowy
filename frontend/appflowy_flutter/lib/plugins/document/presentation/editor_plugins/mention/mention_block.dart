@@ -10,11 +10,13 @@ import 'package:provider/provider.dart';
 enum MentionType {
   page,
   reminder,
-  date;
+  date,
+  childPage;
 
   static MentionType fromString(String value) => switch (value) {
         'page' => page,
         'date' => date,
+        'childPage' => childPage,
         // Backwards compatibility
         'reminder' => date,
         _ => throw UnimplementedError(),
@@ -45,6 +47,7 @@ class MentionBlockKeys {
   static const reminderId = 'reminder_id'; // ReminderID
   static const mention = 'mention';
   static const type = 'type'; // MentionType, String
+
   static const pageId = 'page_id';
 
   // Related to Reminder and Date blocks
@@ -86,6 +89,21 @@ class MentionBlock extends StatelessWidget {
           node: node,
           textStyle: textStyle,
           index: index,
+        );
+      case MentionType.childPage:
+        final String? pageId = mention[MentionBlockKeys.pageId] as String?;
+        if (pageId == null) {
+          return const SizedBox.shrink();
+        }
+
+        return MentionPageBlock(
+          key: ValueKey(pageId),
+          editorState: editorState,
+          pageId: pageId,
+          node: node,
+          textStyle: textStyle,
+          index: index,
+          isChildPage: true,
         );
       case MentionType.date:
         final String date = mention[MentionBlockKeys.date];

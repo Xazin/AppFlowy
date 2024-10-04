@@ -26,6 +26,7 @@ import 'package:appflowy/workspace/application/view/prelude.dart';
 import 'package:appflowy_backend/log.dart';
 import 'package:appflowy_backend/protobuf/flowy-folder/view.pb.dart';
 import 'package:appflowy_editor/appflowy_editor.dart';
+import 'package:collection/collection.dart';
 import 'package:cross_file/cross_file.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -418,20 +419,50 @@ class _DocumentPageState extends State<DocumentPage>
       if (op is InsertOperation) {
         for (final n in op.nodes) {
           for (final handlerType in transactionHandlerTypes) {
-            if (n.type == handlerType) {
-              addedNodes[handlerType]!
-                  .addAll(collectMatchingNodes(n, handlerType));
-            }
+            addedNodes[handlerType]!
+                .addAll(collectMatchingNodes(n, handlerType));
           }
         }
       } else if (op is DeleteOperation) {
         for (final n in op.nodes) {
           for (final handlerType in transactionHandlerTypes) {
-            if (n.type == handlerType) {
-              removedNodes[handlerType]!
-                  .addAll(collectMatchingNodes(n, handlerType));
-            }
+            removedNodes[handlerType]!
+                .addAll(collectMatchingNodes(n, handlerType));
           }
+        }
+      } else if (op is UpdateOperation) {
+        for (final handler in SharedEditorContext.transactionHandlers) {
+          if (!handler.isParagraphSubType) {
+            continue;
+          }
+
+          final List<Map<String, dynamic>> afterAttr = [];
+          final List<Map<String, dynamic>> beforeAttr = [];
+
+          final deltaAfter = op.attributes['delta'] as List?;
+          if (deltaAfter?.isNotEmpty ?? false) {
+            final attributes = deltaAfter!
+                .map((d) => d['attributes'] as Map<String, dynamic>?);
+            final mentions = attributes
+                .whereNotNull()
+                .where((attr) => attr.containsKey(handler.blockType));
+            afterAttr.addAll(mentions);
+          }
+
+          final deltaBefore = op.oldAttributes['delta'] as List?;
+          if (deltaBefore?.isNotEmpty ?? false) {
+            final attributes = deltaBefore!
+                .map((d) => d['attributes'] as Map<String, dynamic>?);
+            final mentions = attributes
+                .whereNotNull()
+                .where((attr) => attr.containsKey(handler.blockType));
+            beforeAttr.addAll(mentions);
+          }
+
+          debugPrint("[DEBUG] ======================================");
+          debugPrint("[DEBUG] Before($beforeAttr)");
+          debugPrint("[DEBUG] After($afterAttr)");
+          debugPrint("[DEBUG] =======================================");
         }
       }
     }

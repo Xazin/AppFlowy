@@ -5,12 +5,19 @@ import 'package:appflowy_editor/appflowy_editor.dart';
 /// A handler for transactions that involve a Block Component.
 ///
 abstract class BlockTransactionHandler {
-  const BlockTransactionHandler({required this.blockType});
+  const BlockTransactionHandler({
+    required this.blockType,
+    this.isParagraphSubType = false,
+  });
 
   /// The type of the block that this handler is built for.
   /// It's used to determine whether to call any of the handlers on certain transactions.
   ///
   final String blockType;
+
+  /// If the block is a "mention" type, it lives inside a Paragraph node.
+  ///
+  final bool isParagraphSubType;
 
   Future<void> onTransaction(
     BuildContext context,

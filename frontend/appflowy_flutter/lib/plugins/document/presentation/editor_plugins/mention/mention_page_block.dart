@@ -51,6 +51,7 @@ class MentionPageBlock extends StatefulWidget {
     required this.node,
     required this.textStyle,
     required this.index,
+    this.isChildPage = false,
   });
 
   final EditorState editorState;
@@ -60,6 +61,8 @@ class MentionPageBlock extends StatefulWidget {
 
   // Used to update the block
   final int index;
+
+  final bool isChildPage;
 
   @override
   State<MentionPageBlock> createState() => _MentionPageBlockState();

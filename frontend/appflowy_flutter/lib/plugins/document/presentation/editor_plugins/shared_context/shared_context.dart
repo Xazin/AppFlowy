@@ -1,9 +1,13 @@
 import 'package:flutter/widgets.dart';
 
 import 'package:appflowy/plugins/document/presentation/editor_plugins/block_transaction_handler/block_transaction_handler.dart';
+import 'package:appflowy/plugins/document/presentation/editor_plugins/mention/child_page_transaction_handler.dart';
 import 'package:appflowy/plugins/document/presentation/editor_plugins/sub_page/block_transaction_handler.dart';
 
-final _transactionHandlers = [SubPageBlockTransactionHandler()];
+final _transactionHandlers = [
+  SubPageBlockTransactionHandler(),
+  ChildPageTransactionHandler(),
+];
 
 /// Shared context for the editor plugins.
 ///

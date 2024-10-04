@@ -60,6 +60,37 @@ extension InsertDatabase on EditorState {
     await apply(transaction);
   }
 
+  Future<void> insertChildPage(String name, String parentViewId) async {
+    final selection = this.selection;
+    if (selection == null || !selection.isCollapsed) {
+      throw FlowyError(
+        msg:
+            "Could not insert child page because current selection was null or collapsed.",
+      );
+    }
+    final node = getNodeAtPath(selection.end.path);
+    if (node == null) {
+      throw FlowyError(
+        msg:
+            "Could not insert child page because  current node at the selection does not exist.",
+      );
+    }
+
+    // Create view
+    final childView = await ViewBackendService.createView(
+      name: name,
+      parentViewId: parentViewId,
+      layoutType: ViewLayoutPB.Document,
+    ).then((value) => value.toNullable());
+
+    if (childView == null) {
+      throw FlowyError(msg: "ViewBackendService failed to create a child view");
+    }
+
+    final transaction = await _insertChildPage(childView, selection, node);
+    await apply(transaction);
+  }
+
   Future<Transaction> _insertDocumentReference(
     ViewPB view,
     Selection selection,
@@ -120,6 +151,26 @@ extension InsertDatabase on EditorState {
             DatabaseBlockKeys.viewID: ref.id,
           },
         ),
+      );
+  }
+
+  Future<Transaction> _insertChildPage(
+    ViewPB view,
+    Selection selection,
+    Node node,
+  ) async {
+    return transaction
+      ..replaceText(
+        node,
+        selection.end.offset,
+        0,
+        r'$',
+        attributes: {
+          MentionBlockKeys.mention: {
+            MentionBlockKeys.type: MentionType.childPage.name,
+            MentionBlockKeys.pageId: view.id,
+          },
+        },
       );
   }
 
