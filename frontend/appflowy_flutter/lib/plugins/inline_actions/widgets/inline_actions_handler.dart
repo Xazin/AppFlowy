@@ -78,6 +78,8 @@ class InlineActionsHandler extends StatefulWidget {
 }
 
 class _InlineActionsHandlerState extends State<InlineActionsHandler> {
+  late InlineActionsMenuStyle style = widget.style;
+
   final _focusNode = FocusNode(debugLabel: 'inline_actions_menu_handler');
   final _scrollController = ScrollController();
 
@@ -147,6 +149,14 @@ class _InlineActionsHandlerState extends State<InlineActionsHandler> {
   }
 
   @override
+  void didUpdateWidget(InlineActionsHandler oldWidget) {
+    if (oldWidget.style != widget.style) {
+      style = widget.style;
+    }
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Focus(
       focusNode: _focusNode,
@@ -157,7 +167,7 @@ class _InlineActionsHandlerState extends State<InlineActionsHandler> {
           minWidth: kInlineMenuWidth,
         ),
         decoration: BoxDecoration(
-          color: widget.style.backgroundColor,
+          color: style.backgroundColor,
           borderRadius: BorderRadius.circular(6.0),
           boxShadow: [
             BoxShadow(
@@ -188,7 +198,7 @@ class _InlineActionsHandlerState extends State<InlineActionsHandler> {
                             result: group,
                             editorState: widget.editorState,
                             menuService: widget.menuService,
-                            style: widget.style,
+                            style: style,
                             onSelected: widget.onDismiss,
                             startOffset: startOffset - widget.startCharAmount,
                             endOffset: _search.length + widget.startCharAmount,

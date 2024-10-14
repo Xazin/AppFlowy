@@ -10,6 +10,7 @@ import 'package:appflowy_backend/log.dart';
 import 'package:appflowy_backend/protobuf/flowy-document/protobuf.dart';
 import 'package:appflowy_backend/protobuf/flowy-folder/protobuf.dart';
 import 'package:appflowy_editor/appflowy_editor.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
@@ -17,7 +18,7 @@ part 'mention_page_bloc.freezed.dart';
 
 typedef MentionPageStatus = (ViewPB? view, bool isInTrash, bool isDeleted);
 
-/// Observer the mentioned page status
+/// Observe the mentioned page status
 /// Including:
 /// - if view is changed, title, icon
 /// - if view is in trash
@@ -29,14 +30,13 @@ class MentionPageBloc extends Bloc<MentionPageEvent, MentionPageState> {
   MentionPageBloc({
     required this.pageId,
     this.blockId,
+    required this.isChildPage,
   }) : super(MentionPageState.initial()) {
     on<MentionPageEvent>((event, emit) async {
       await event.when(
         initial: () async {
           final (view, isInTrash, isDeleted) =
-              await ViewBackendService.getMentionPageStatus(
-            pageId,
-          );
+              await ViewBackendService.getMentionPageStatus(pageId);
           final blockContent = await _getBlockContent();
           emit(
             state.copyWith(
@@ -53,12 +53,8 @@ class MentionPageBloc extends Bloc<MentionPageEvent, MentionPageState> {
             _startListeningDocument();
           }
         },
-        didUpdateBlockContent: (content) {
-          emit(
-            state.copyWith(
-              blockContent: content,
-            ),
-          );
+        didUpdateBlockContent: (content) async {
+          emit(state.copyWith(blockContent: content));
         },
         didUpdateViewStatus: (mentionPageStatus) {
           emit(
@@ -82,6 +78,7 @@ class MentionPageBloc extends Bloc<MentionPageEvent, MentionPageState> {
 
   final String pageId;
   final String? blockId;
+  final bool isChildPage;
 
   final _documentService = DocumentService();
   ViewListener? _viewListener;
@@ -94,25 +91,13 @@ class MentionPageBloc extends Bloc<MentionPageEvent, MentionPageState> {
     _viewListener = ViewListener(viewId: pageId)
       ..start(
         onViewUpdated: (view) {
-          add(
-            MentionPageEvent.didUpdateViewStatus(
-              (view, false, false),
-            ),
-          );
+          add(MentionPageEvent.didUpdateViewStatus((view, false, false)));
         },
         onViewMoveToTrash: (view) {
-          add(
-            MentionPageEvent.didUpdateViewStatus(
-              (state.view, true, false),
-            ),
-          );
+          add(MentionPageEvent.didUpdateViewStatus((state.view, true, false)));
         },
         onViewDeleted: (view) {
-          add(
-            MentionPageEvent.didUpdateViewStatus(
-              (state.view, false, true),
-            ),
-          );
+          add(MentionPageEvent.didUpdateViewStatus((state.view, false, true)));
         },
       );
   }

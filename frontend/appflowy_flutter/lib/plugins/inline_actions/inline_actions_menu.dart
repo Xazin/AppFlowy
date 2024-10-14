@@ -113,9 +113,6 @@ class InlineActionsMenu extends InlineActionsMenuService {
       builder: (context) => SizedBox(
         height: editorSize.height,
         width: editorSize.width,
-
-        // GestureDetector handles clicks outside of the context menu,
-        // to dismiss the context menu.
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: dismiss,

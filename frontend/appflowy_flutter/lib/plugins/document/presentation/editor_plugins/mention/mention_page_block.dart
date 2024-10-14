@@ -41,6 +41,24 @@ Node pageMentionNode(String viewId) {
   );
 }
 
+Node childPageMentionNode(String viewId) {
+  return paragraphNode(
+    delta: Delta(
+      operations: [
+        TextInsert(
+          MentionBlockKeys.mentionChar,
+          attributes: {
+            MentionBlockKeys.mention: {
+              MentionBlockKeys.type: MentionType.page.name,
+              MentionBlockKeys.pageId: viewId,
+            },
+          },
+        ),
+      ],
+    ),
+  );
+}
+
 class MentionPageBlock extends StatefulWidget {
   const MentionPageBlock({
     super.key,
@@ -50,6 +68,7 @@ class MentionPageBlock extends StatefulWidget {
     required this.node,
     required this.textStyle,
     required this.index,
+    this.isChildPage = false,
   });
 
   final EditorState editorState;
@@ -57,6 +76,7 @@ class MentionPageBlock extends StatefulWidget {
   final String? blockId;
   final Node node;
   final TextStyle? textStyle;
+  final bool isChildPage;
 
   // Used to update the block
   final int index;
@@ -66,23 +86,18 @@ class MentionPageBlock extends StatefulWidget {
 }
 
 class _MentionPageBlockState extends State<MentionPageBlock> {
-  late final EditorState editorState;
-
-  @override
-  void initState() {
-    super.initState();
-
-    editorState = context.read<EditorState>();
-  }
+  EditorState get editorState => context.read<EditorState>();
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => MentionPageBloc(
+      create: (_) => MentionPageBloc(
         pageId: widget.pageId,
         blockId: widget.blockId,
+        isChildPage: widget.isChildPage,
       )..add(const MentionPageEvent.initial()),
-      child: BlocBuilder<MentionPageBloc, MentionPageState>(
+      child: BlocConsumer<MentionPageBloc, MentionPageState>(
+        listener: (context, state) {},
         builder: (context, state) {
           final view = state.view;
           if (state.isLoading) {
