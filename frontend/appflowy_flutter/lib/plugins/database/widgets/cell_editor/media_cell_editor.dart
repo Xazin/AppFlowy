@@ -1,3 +1,5 @@
+import 'package:appflowy/plugins/database/grid/application/row/row_detail_bloc.dart';
+import 'package:appflowy_backend/protobuf/flowy-database2/row_entities.pb.dart';
 import 'package:flutter/material.dart';
 
 import 'package:appflowy/core/helpers/url_launcher.dart';
@@ -50,144 +52,165 @@ class _MediaCellEditorState extends State<MediaCellEditor> {
             .where((file) => file.fileType == MediaFileTypePB.Image)
             .toList();
 
-        return Padding(
-          padding: const EdgeInsets.all(4),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (state.files.isNotEmpty) ...[
-                  ReorderableListView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    buildDefaultDragHandles: false,
-                    itemBuilder: (_, index) => BlocProvider.value(
-                      key: Key(state.files[index].id),
-                      value: context.read<MediaCellBloc>(),
-                      child: RenderMedia(
-                        file: state.files[index],
-                        images: images,
-                        index: index,
-                        enableReordering: state.files.length > 1,
-                        mutex: itemMutex,
-                      ),
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (state.files.isNotEmpty) ...[
+              Flexible(
+                child: ReorderableListView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  buildDefaultDragHandles: false,
+                  itemBuilder: (_, index) => BlocProvider.value(
+                    key: Key(state.files[index].id),
+                    value: context.read<MediaCellBloc>(),
+                    child: RenderMedia(
+                      file: state.files[index],
+                      images: images,
+                      index: index,
+                      enableReordering: state.files.length > 1,
+                      mutex: itemMutex,
                     ),
-                    itemCount: state.files.length,
-                    onReorder: (from, to) => context
+                  ),
+                  itemCount: state.files.length,
+                  onReorder: (from, to) {
+                    if (from < to) {
+                      to--;
+                    }
+
+                    context
                         .read<MediaCellBloc>()
-                        .add(MediaCellEvent.reorderFiles(from: from, to: to)),
-                    proxyDecorator: (child, index, animation) => Material(
-                      color: Colors.transparent,
-                      child: SizeTransition(
-                        sizeFactor: animation,
-                        child: child,
-                      ),
-                    ),
-                  ),
-                  const Divider(height: 8),
-                ],
-                AppFlowyPopover(
-                  controller: addFilePopoverController,
-                  direction: PopoverDirection.bottomWithCenterAligned,
-                  offset: const Offset(0, 10),
-                  constraints: const BoxConstraints(
-                    minWidth: 250,
-                    maxWidth: 250,
-                  ),
-                  triggerActions: PopoverTriggerFlags.none,
-                  popupBuilder: (popoverContext) => FileUploadMenu(
-                    allowMultipleFiles: true,
-                    onInsertLocalFile: (files) async => insertLocalFiles(
-                      context,
-                      files,
-                      userProfile:
-                          context.read<MediaCellBloc>().state.userProfile,
-                      documentId: context.read<MediaCellBloc>().rowId,
-                      onUploadSuccess: (file, path, isLocalMode) {
-                        final mediaCellBloc = context.read<MediaCellBloc>();
-                        if (mediaCellBloc.isClosed) {
-                          return;
-                        }
-
-                        mediaCellBloc.add(
-                          MediaCellEvent.addFile(
-                            url: path,
-                            name: file.name,
-                            uploadType: isLocalMode
-                                ? FileUploadTypePB.LocalFile
-                                : FileUploadTypePB.CloudFile,
-                            fileType: file.fileType.toMediaFileTypePB(),
-                          ),
-                        );
-
-                        addFilePopoverController.close();
-                      },
-                    ),
-                    onInsertNetworkFile: (url) {
-                      if (url.isEmpty) return;
-
-                      final uri = Uri.tryParse(url);
-                      if (uri == null) {
-                        return;
-                      }
-
-                      final fakeFile = XFile(uri.path);
-                      MediaFileTypePB fileType =
-                          fakeFile.fileType.toMediaFileTypePB();
-                      fileType = fileType == MediaFileTypePB.Other
-                          ? MediaFileTypePB.Link
-                          : fileType;
-
-                      String name = uri.pathSegments.isNotEmpty
-                          ? uri.pathSegments.last
-                          : "";
-                      if (name.isEmpty && uri.pathSegments.length > 1) {
-                        name = uri.pathSegments[uri.pathSegments.length - 2];
-                      } else if (name.isEmpty) {
-                        name = uri.host;
-                      }
-
-                      context.read<MediaCellBloc>().add(
-                            MediaCellEvent.addFile(
-                              url: url,
-                              name: name,
-                              uploadType: FileUploadTypePB.NetworkFile,
-                              fileType: fileType,
-                            ),
-                          );
-
-                      addFilePopoverController.close();
-                    },
-                  ),
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onTap: addFilePopoverController.show,
-                    child: FlowyHover(
-                      resetHoverOnRebuild: false,
-                      child: Padding(
-                        padding: const EdgeInsets.all(4.0),
-                        child: Row(
-                          children: [
-                            const FlowySvg(
-                              FlowySvgs.add_s,
-                              size: Size.square(18),
-                            ),
-                            const HSpace(8),
-                            FlowyText(
-                              LocaleKeys.grid_media_addFileOrImage.tr(),
-                              lineHeight: 1.0,
-                            ),
-                          ],
-                        ),
-                      ),
+                        .add(MediaCellEvent.reorderFiles(from: from, to: to));
+                  },
+                  proxyDecorator: (child, index, animation) => Material(
+                    color: Colors.transparent,
+                    child: SizeTransition(
+                      sizeFactor: animation,
+                      child: child,
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
+              ),
+            ],
+            _AddButton(addFilePopoverController: addFilePopoverController),
+          ],
         );
       },
+    );
+  }
+}
+
+class _AddButton extends StatelessWidget {
+  const _AddButton({required this.addFilePopoverController});
+
+  final PopoverController addFilePopoverController;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppFlowyPopover(
+      controller: addFilePopoverController,
+      direction: PopoverDirection.bottomWithCenterAligned,
+      offset: const Offset(0, 10),
+      constraints: const BoxConstraints(maxWidth: 350),
+      triggerActions: PopoverTriggerFlags.none,
+      popupBuilder: (popoverContext) => FileUploadMenu(
+        allowMultipleFiles: true,
+        onInsertLocalFile: (files) async => insertLocalFiles(
+          context,
+          files,
+          userProfile: context.read<MediaCellBloc>().state.userProfile,
+          documentId: context.read<MediaCellBloc>().rowId,
+          onUploadSuccess: (file, path, isLocalMode) {
+            final mediaCellBloc = context.read<MediaCellBloc>();
+            if (mediaCellBloc.isClosed) {
+              return;
+            }
+
+            mediaCellBloc.add(
+              MediaCellEvent.addFile(
+                url: path,
+                name: file.name,
+                uploadType: isLocalMode
+                    ? FileUploadTypePB.LocalFile
+                    : FileUploadTypePB.CloudFile,
+                fileType: file.fileType.toMediaFileTypePB(),
+              ),
+            );
+
+            addFilePopoverController.close();
+          },
+        ),
+        onInsertNetworkFile: (url) {
+          if (url.isEmpty) return;
+
+          final uri = Uri.tryParse(url);
+          if (uri == null) {
+            return;
+          }
+
+          final fakeFile = XFile(uri.path);
+          MediaFileTypePB fileType = fakeFile.fileType.toMediaFileTypePB();
+          fileType = fileType == MediaFileTypePB.Other
+              ? MediaFileTypePB.Link
+              : fileType;
+
+          String name =
+              uri.pathSegments.isNotEmpty ? uri.pathSegments.last : "";
+          if (name.isEmpty && uri.pathSegments.length > 1) {
+            name = uri.pathSegments[uri.pathSegments.length - 2];
+          } else if (name.isEmpty) {
+            name = uri.host;
+          }
+
+          context.read<MediaCellBloc>().add(
+                MediaCellEvent.addFile(
+                  url: url,
+                  name: name,
+                  uploadType: FileUploadTypePB.NetworkFile,
+                  fileType: fileType,
+                ),
+              );
+
+          addFilePopoverController.close();
+        },
+      ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: Theme.of(context).dividerColor,
+            ),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: addFilePopoverController.show,
+            child: FlowyHover(
+              resetHoverOnRebuild: false,
+              child: Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: Row(
+                  children: [
+                    const FlowySvg(
+                      FlowySvgs.add_thin_s,
+                      size: Size.square(16),
+                      color: Color(0xFF8F959E),
+                    ),
+                    const HSpace(8),
+                    FlowyText.regular(
+                      LocaleKeys.grid_media_addFileOrImage.tr(),
+                      figmaLineHeight: 20,
+                      fontSize: 14,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -411,7 +434,31 @@ class _MediaItemMenuState extends State<MediaItemMenu> {
               size: const Size.square(18),
             ),
             text: FlowyText.regular(
-              LocaleKeys.settings_files_open.tr(),
+              LocaleKeys.grid_media_expand.tr(),
+              color: AFThemeExtension.of(context).textColor,
+            ),
+            leftIconSize: const Size(18, 18),
+            hoverColor: AFThemeExtension.of(context).lightGreyHover,
+          ),
+          FlowyButton(
+            onTap: () {
+              context.read<RowDetailBloc>().add(
+                    RowDetailEvent.setCover(
+                      RowCoverPB(
+                        data: widget.file.url,
+                        uploadType: widget.file.uploadType,
+                        coverType: CoverTypePB.FileCover,
+                      ),
+                    ),
+                  );
+            },
+            leftIcon: FlowySvg(
+              FlowySvgs.cover_s,
+              color: Theme.of(context).iconTheme.color,
+              size: const Size.square(18),
+            ),
+            text: FlowyText.regular(
+              LocaleKeys.grid_media_setAsCover.tr(),
               color: AFThemeExtension.of(context).textColor,
             ),
             leftIconSize: const Size(18, 18),
@@ -420,7 +467,7 @@ class _MediaItemMenuState extends State<MediaItemMenu> {
         ],
         FlowyButton(
           leftIcon: FlowySvg(
-            FlowySvgs.edit_s,
+            FlowySvgs.rename_s,
             color: Theme.of(context).iconTheme.color,
             size: const Size.square(18),
           ),

@@ -22,7 +22,6 @@ import 'package:cross_file/cross_file.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flowy_infra/file_picker/file_picker_impl.dart';
 import 'package:flowy_infra/uuid.dart';
-import 'package:flowy_infra_ui/style_widget/snap_bar.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:universal_platform/universal_platform.dart';
@@ -108,9 +107,9 @@ Future<void> downloadMediaFile(
     await afLaunchUrl(Uri.parse(file.url));
   } else {
     if (userProfile == null) {
-      return showSnapBar(
+      return showToastNotification(
         context,
-        LocaleKeys.grid_media_downloadFailedToken.tr(),
+        message: LocaleKeys.grid_media_downloadFailedToken.tr(),
       );
     }
 
@@ -160,15 +159,16 @@ Future<void> downloadMediaFile(
         await imgFile.writeAsBytes(response.bodyBytes);
 
         if (context.mounted) {
-          showSnapBar(
+          showToastNotification(
             context,
-            LocaleKeys.grid_media_downloadSuccess.tr(),
+            message: LocaleKeys.grid_media_downloadSuccess.tr(),
           );
         }
       } else if (context.mounted) {
-        showSnapBar(
+        showToastNotification(
           context,
-          LocaleKeys.document_plugins_image_imageDownloadFailed.tr(),
+          type: ToastificationType.error,
+          message: LocaleKeys.document_plugins_image_imageDownloadFailed.tr(),
         );
       }
     }

@@ -110,10 +110,6 @@ class MediaCellBloc extends Bloc<MediaCellEvent, MediaCellState> {
           },
           reorderFiles: (from, to) async {
             final files = List<MediaFilePB>.from(state.files);
-            if (from < to) {
-              to--;
-            }
-
             files.insert(to, files.removeAt(from));
 
             // We emit the new state first to update the UI

@@ -37,16 +37,19 @@ class GridMediaCellSkin extends IEditableMediaCellSkin {
 
     Widget child = BlocBuilder<MediaCellBloc, MediaCellState>(
       builder: (context, state) {
-        final filesToDisplay = state.files.take(4).toList();
-        final extraCount = state.files.length - filesToDisplay.length;
-
         final wrapContent = context.read<MediaCellBloc>().wrapContent;
-        final children = <Widget>[
-          ...filesToDisplay.map((file) => _FilePreviewRender(file: file)),
-          if (extraCount > 0) _ExtraInfo(extraCount: extraCount),
-        ];
+        final List<Widget> children = state.files
+            .map(
+              (file) => Padding(
+                padding: wrapContent
+                    ? const EdgeInsets.only(right: 4)
+                    : EdgeInsets.zero,
+                child: _FilePreviewRender(file: file),
+              ),
+            )
+            .toList();
 
-        if (isMobileRowDetail && filesToDisplay.isEmpty) {
+        if (isMobileRowDetail && state.files.isEmpty) {
           children.add(
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
@@ -161,9 +164,8 @@ class _FilePreviewRender extends StatelessWidget {
   Widget build(BuildContext context) {
     if (file.fileType != MediaFileTypePB.Image) {
       return Container(
-        margin: const EdgeInsets.symmetric(horizontal: 2),
-        height: 32,
-        width: 32,
+        height: 28,
+        width: 28,
         clipBehavior: Clip.antiAlias,
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
@@ -178,42 +180,14 @@ class _FilePreviewRender extends StatelessWidget {
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 2),
-      height: 32,
-      width: 32,
+      height: 28,
+      width: 28,
       clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(4),
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(4)),
       child: AFImage(
         url: file.url,
         uploadType: file.uploadType,
         userProfile: context.read<MediaCellBloc>().state.userProfile,
-      ),
-    );
-  }
-}
-
-class _ExtraInfo extends StatelessWidget {
-  const _ExtraInfo({required this.extraCount});
-
-  final int extraCount;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: Container(
-        height: 32,
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: AFThemeExtension.of(context).greyHover,
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: FlowyText.regular(
-          LocaleKeys.grid_media_moreFilesHint.tr(args: ['$extraCount']),
-          lineHeight: 1,
-        ),
       ),
     );
   }
