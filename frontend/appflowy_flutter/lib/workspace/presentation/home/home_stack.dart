@@ -34,7 +34,7 @@ abstract class HomeStackDelegate {
   void didDeleteStackWidget(ViewPB view, int? index);
 }
 
-class HomeStack extends StatelessWidget {
+class HomeStack extends StatefulWidget {
   const HomeStack({
     super.key,
     required this.delegate,
@@ -47,13 +47,18 @@ class HomeStack extends StatelessWidget {
   final UserProfilePB userProfile;
 
   @override
-  Widget build(BuildContext context) {
-    final pageController = PageController();
+  State<HomeStack> createState() => _HomeStackState();
+}
 
+class _HomeStackState extends State<HomeStack> {
+  @override
+  Widget build(BuildContext context) {
     return BlocProvider<TabsBloc>.value(
       value: getIt<TabsBloc>(),
       child: BlocBuilder<TabsBloc, TabsState>(
         builder: (context, state) {
+          final pageManager = state.currentPageManager;
+
           return Column(
             children: [
               if (Platform.isWindows)
@@ -68,23 +73,15 @@ class HomeStack extends StatelessWidget {
                   ],
                 ),
               Padding(
-                padding: EdgeInsets.only(left: layout.menuSpacing),
-                child: TabsManager(pageController: pageController),
+                padding: EdgeInsets.only(left: widget.layout.menuSpacing),
+                child: const TabsManager(),
               ),
-              state.currentPageManager.stackTopBar(layout: layout),
+              state.currentPageManager.stackTopBar(layout: widget.layout),
               Expanded(
-                child: PageView(
-                  physics: const NeverScrollableScrollPhysics(),
-                  controller: pageController,
-                  children: state.pageManagers
-                      .map(
-                        (pm) => PageStack(
-                          pageManager: pm,
-                          delegate: delegate,
-                          userProfile: userProfile,
-                        ),
-                      )
-                      .toList(),
+                child: PageStack(
+                  pageManager: pageManager,
+                  delegate: widget.delegate,
+                  userProfile: widget.userProfile,
                 ),
               ),
             ],
@@ -269,19 +266,12 @@ class PageManager {
 
   PageNotifier get notifier => _notifier;
 
-  Widget title() {
-    return _notifier.plugin.widgetBuilder.leftBarItem;
-  }
+  Widget title() => _notifier.plugin.widgetBuilder.leftBarItem;
 
   Plugin get plugin => _notifier.plugin;
 
-  void setPlugin(Plugin newPlugin, bool setLatest) {
-    _notifier.setPlugin(newPlugin, setLatest);
-  }
-
-  void setStackWithId(String id) {
-    // Navigate to the page with id
-  }
+  void setPlugin(Plugin newPlugin, bool setLatest) =>
+      _notifier.setPlugin(newPlugin, setLatest);
 
   Widget stackTopBar({required HomeLayout layout}) {
     return MultiProvider(
@@ -335,10 +325,13 @@ class PageManager {
     );
   }
 
-  void dispose() {
-    _notifier.dispose();
-  }
+  void dispose() => _notifier.dispose();
 }
+
+/// Includes information such as previous scroll offset (vertical+horizontal),
+/// previous selection if any, etc.
+///
+class PageMemory {}
 
 class HomeTopBar extends StatelessWidget {
   const HomeTopBar({super.key, required this.layout});

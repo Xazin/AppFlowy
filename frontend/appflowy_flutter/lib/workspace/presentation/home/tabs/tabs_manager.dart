@@ -7,9 +7,7 @@ import 'package:appflowy/workspace/presentation/home/tabs/flowy_tab.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class TabsManager extends StatefulWidget {
-  const TabsManager({super.key, required this.pageController});
-
-  final PageController pageController;
+  const TabsManager({super.key});
 
   @override
   State<TabsManager> createState() => _TabsManagerState();
@@ -37,17 +35,6 @@ class _TabsManagerState extends State<TabsManager>
               vsync: this,
               initialIndex: state.currentIndex,
               length: state.pages,
-            );
-          }
-
-          if (state.currentIndex != widget.pageController.page) {
-            // Unfocus editor to hide selection toolbar
-            FocusScope.of(context).unfocus();
-
-            widget.pageController.animateToPage(
-              state.currentIndex,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
             );
           }
         },
