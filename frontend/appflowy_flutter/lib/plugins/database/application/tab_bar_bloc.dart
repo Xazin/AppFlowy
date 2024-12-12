@@ -83,7 +83,7 @@ class DatabaseTabBarBloc
               final tabBarControllerByViewId = {
                 ...state.tabBarControllerByViewId,
               };
-              var newSelectedIndex = state.selectedIndex;
+              int newSelectedIndex = state.selectedIndex;
               for (final viewId in updatePB.deleteChildViews) {
                 final index = allTabBars.indexWhere(
                   (element) => element.viewId == viewId,
@@ -121,6 +121,33 @@ class DatabaseTabBarBloc
               allTabBars[index] = updatedTabBar;
               emit(state.copyWith(tabBars: allTabBars));
             }
+          },
+          reorderView: (from, to) async {
+            int selectedIndex = state.selectedIndex;
+            if (from == selectedIndex) {
+              selectedIndex = to;
+            } else if (from < selectedIndex && to >= selectedIndex) {
+              selectedIndex--;
+            } else if (from > selectedIndex && to <= selectedIndex) {
+              selectedIndex++;
+            }
+
+            final allTabBars = [...state.tabBars];
+            final tabBar = allTabBars.removeAt(from);
+            allTabBars.insert(to, tabBar);
+
+            await ViewBackendService.moveViewV2(
+              viewId: tabBar.viewId,
+              newParentId: state.parentView.id,
+              prevViewId: allTabBars.elementAtOrNull(to - 1)?.viewId,
+            );
+
+            emit(
+              state.copyWith(
+                tabBars: allTabBars,
+                selectedIndex: selectedIndex,
+              ),
+            );
           },
         );
       },
@@ -220,6 +247,8 @@ class DatabaseTabBarEvent with _$DatabaseTabBarEvent {
     ChildViewUpdatePB updatePB,
   ) = _DidUpdateChildViews;
   const factory DatabaseTabBarEvent.viewDidUpdate(ViewPB view) = _ViewDidUpdate;
+  const factory DatabaseTabBarEvent.reorderView(int from, int to) =
+      _ReorderView;
 }
 
 @freezed

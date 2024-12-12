@@ -49,10 +49,10 @@ class KVKeys {
   ///  {'SidebarFolderCategoryType.value': true}
   static const String expandedFolders = 'expandedFolders';
 
-  /// @deprecated in version 0.7.6
   /// The key for saving if showing the rename dialog when creating a new file
   ///
   /// The value is a boolean string.
+  @Deprecated("in version 0.7.6")
   static const String showRenameDialogWhenCreatingNewFile =
       'showRenameDialogWhenCreatingNewFile';
 

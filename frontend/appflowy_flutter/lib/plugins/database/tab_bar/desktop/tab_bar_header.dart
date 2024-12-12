@@ -16,9 +16,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'tab_bar_add_button.dart';
 
 class TabBarHeader extends StatelessWidget {
-  const TabBarHeader({
-    super.key,
-  });
+  const TabBarHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -43,17 +41,13 @@ class TabBarHeader extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Expanded(
-                child: DatabaseTabBar(),
-              ),
+              const Expanded(child: DatabaseTabBar()),
               Flexible(
                 child: BlocBuilder<DatabaseTabBarBloc, DatabaseTabBarState>(
-                  builder: (context, state) {
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 6.0),
-                      child: pageSettingBarFromState(context, state),
-                    );
-                  },
+                  builder: (context, state) => Padding(
+                    padding: const EdgeInsets.only(top: 6.0),
+                    child: pageSettingBarFromState(context, state),
+                  ),
                 ),
               ),
             ],
@@ -97,35 +91,34 @@ class _DatabaseTabBarState extends State<DatabaseTabBar> {
   Widget build(BuildContext context) {
     return BlocBuilder<DatabaseTabBarBloc, DatabaseTabBarState>(
       builder: (context, state) {
-        return ListView.separated(
-          controller: _scrollController,
+        return ReorderableListView.builder(
+          buildDefaultDragHandles: false,
           scrollDirection: Axis.horizontal,
-          shrinkWrap: true,
-          itemCount: state.tabBars.length + 1,
-          itemBuilder: (context, index) => index == state.tabBars.length
-              ? AddDatabaseViewButton(
-                  onTap: (layoutType) {
-                    context
-                        .read<DatabaseTabBarBloc>()
-                        .add(DatabaseTabBarEvent.createView(layoutType, null));
-                  },
-                )
-              : DatabaseTabBarItem(
-                  key: ValueKey(state.tabBars[index].viewId),
-                  view: state.tabBars[index].view,
-                  isSelected: state.selectedIndex == index,
-                  onTap: (selectedView) {
-                    context.read<DatabaseTabBarBloc>().add(
-                          DatabaseTabBarEvent.selectView(selectedView.id),
-                        );
-                  },
-                ),
-          separatorBuilder: (context, index) => VerticalDivider(
-            width: 1.0,
-            thickness: 1.0,
-            indent: 8,
-            endIndent: 13,
-            color: Theme.of(context).dividerColor,
+          itemCount: state.tabBars.length,
+          onReorder: (from, to) {
+            if (from < to) {
+              to--;
+            }
+
+            context
+                .read<DatabaseTabBarBloc>()
+                .add(DatabaseTabBarEvent.reorderView(from, to));
+          },
+          footer: AddDatabaseViewButton(
+            onTap: (layoutType) => context
+                .read<DatabaseTabBarBloc>()
+                .add(DatabaseTabBarEvent.createView(layoutType, null)),
+          ),
+          itemBuilder: (context, index) => ReorderableDragStartListener(
+            key: ValueKey(state.tabBars[index].viewId),
+            index: index,
+            child: DatabaseTabBarItem(
+              view: state.tabBars[index].view,
+              isSelected: state.selectedIndex == index,
+              onTap: (view) => context
+                  .read<DatabaseTabBarBloc>()
+                  .add(DatabaseTabBarEvent.selectView(view.id)),
+            ),
           ),
         );
       },

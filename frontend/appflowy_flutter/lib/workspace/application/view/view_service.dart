@@ -203,7 +203,7 @@ class ViewBackendService {
     return FolderEventUpdateViewIcon(payload).send();
   }
 
-  // deprecated
+  @Deprecated('Use moveViewV2 instead')
   static Future<FlowyResult<void, FlowyError>> moveView({
     required String viewId,
     required int fromIndex,
