@@ -754,7 +754,8 @@ extension CommonOperations on WidgetTester {
   Future<void> duplicateByMoreViewActions() async {
     final button = find.byWidgetPredicate(
       (widget) =>
-          widget is ViewAction && widget.type == ViewMoreActionType.duplicate,
+          widget is CommonViewAction &&
+          widget.type == ViewMoreActionType.duplicate,
     );
     await tap(button);
     await pump();
@@ -769,7 +770,8 @@ extension CommonOperations on WidgetTester {
       of: find.byType(ListView),
       matching: find.byWidgetPredicate(
         (widget) =>
-            widget is ViewAction && widget.type == ViewMoreActionType.delete,
+            widget is CommonViewAction &&
+            widget.type == ViewMoreActionType.delete,
       ),
     );
     await tap(button);

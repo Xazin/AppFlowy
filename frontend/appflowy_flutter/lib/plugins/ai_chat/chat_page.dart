@@ -7,6 +7,7 @@ import 'package:appflowy/plugins/ai_chat/application/chat_bloc.dart';
 import 'package:appflowy/plugins/ai_chat/application/chat_entity.dart';
 import 'package:appflowy/plugins/ai_chat/application/ai_prompt_input_bloc.dart';
 import 'package:appflowy/plugins/ai_chat/application/chat_message_stream.dart';
+import 'package:appflowy/plugins/ai_chat/presentation/chat_message_selector_banner.dart';
 import 'package:appflowy/plugins/ai_chat/presentation/chat_related_question.dart';
 import 'package:appflowy/startup/startup.dart';
 import 'package:appflowy/workspace/application/tabs/tabs_bloc.dart';
@@ -110,51 +111,68 @@ class _ChatContentPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 784),
-        margin: UniversalPlatform.isDesktop
-            ? const EdgeInsets.symmetric(horizontal: 60.0)
-            : null,
-        child: ScrollConfiguration(
-          behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-          child: BlocBuilder<ChatBloc, ChatState>(
-            builder: (context, state) {
-              return state.loadingState.when(
-                loading: () {
-                  return const Center(
-                    child: CircularProgressIndicator.adaptive(),
-                  );
-                },
-                finish: (_) {
-                  final chatController =
-                      context.read<ChatBloc>().chatController;
-                  return Column(
-                    children: [
-                      Expanded(
-                        child: Chat(
-                          chatController: chatController,
-                          user: User(id: userProfile.id.toString()),
-                          darkTheme: ChatTheme.fromThemeData(Theme.of(context)),
-                          theme: ChatTheme.fromThemeData(Theme.of(context)),
-                          builders: Builders(
-                            inputBuilder: (_) => const SizedBox.shrink(),
-                            textMessageBuilder: _buildTextMessage,
-                            chatMessageBuilder: _buildChatMessage,
-                            scrollToBottomBuilder: _buildScrollToBottom,
-                            chatAnimatedListBuilder: _buildChatAnimatedList,
-                          ),
-                        ),
-                      ),
-                      _buildInput(context),
-                    ],
-                  );
-                },
-              );
-            },
+    return BlocBuilder<ChatBloc, ChatState>(
+      builder: (context, state) {
+        return Center(
+          child: Column(
+            children: [
+              ChatMessageSelectorBanner(
+                allMessages: state.loadingState.when(
+                  loading: () => const [],
+                  finish: (_) =>
+                      context.read<ChatBloc>().chatController.messages,
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 784),
+                  margin: UniversalPlatform.isDesktop
+                      ? const EdgeInsets.symmetric(horizontal: 60.0)
+                      : null,
+                  child: ScrollConfiguration(
+                    behavior: ScrollConfiguration.of(context)
+                        .copyWith(scrollbars: false),
+                    child: state.loadingState.when(
+                      loading: () {
+                        return const Center(
+                          child: CircularProgressIndicator.adaptive(),
+                        );
+                      },
+                      finish: (_) {
+                        final chatController =
+                            context.read<ChatBloc>().chatController;
+                        return Column(
+                          children: [
+                            Expanded(
+                              child: Chat(
+                                chatController: chatController,
+                                user: User(id: userProfile.id.toString()),
+                                darkTheme:
+                                    ChatTheme.fromThemeData(Theme.of(context)),
+                                theme:
+                                    ChatTheme.fromThemeData(Theme.of(context)),
+                                builders: Builders(
+                                  inputBuilder: (_) => const SizedBox.shrink(),
+                                  textMessageBuilder: _buildTextMessage,
+                                  chatMessageBuilder: _buildChatMessage,
+                                  scrollToBottomBuilder: _buildScrollToBottom,
+                                  chatAnimatedListBuilder:
+                                      _buildChatAnimatedList,
+                                ),
+                              ),
+                            ),
+                            _buildInput(context),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 

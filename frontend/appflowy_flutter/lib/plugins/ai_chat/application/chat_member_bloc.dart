@@ -12,35 +12,28 @@ class ChatMemberBloc extends Bloc<ChatMemberEvent, ChatMemberState> {
   ChatMemberBloc() : super(const ChatMemberState()) {
     on<ChatMemberEvent>(
       (event, emit) async {
-        event.when(
+        await event.when(
           receiveMemberInfo: (String id, WorkspaceMemberPB memberInfo) {
             final members = Map<String, ChatMember>.from(state.members);
             members[id] = ChatMember(info: memberInfo);
             emit(state.copyWith(members: members));
           },
-          getMemberInfo: (String userId) {
+          getMemberInfo: (String userId) async {
             if (state.members.containsKey(userId)) {
               // Member info already exists. Debouncing refresh member info from backend would be better.
               return;
             }
 
-            final payload = WorkspaceMemberIdPB(
-              uid: Int64.parseInt(userId),
-            );
-            UserEventGetMemberInfo(payload).send().then((result) {
-              if (!isClosed) {
-                result.fold((member) {
-                  add(
-                    ChatMemberEvent.receiveMemberInfo(
-                      userId,
-                      member,
-                    ),
-                  );
-                }, (err) {
-                  Log.error("Error getting member info: $err");
-                });
-              }
-            });
+            final payload = WorkspaceMemberIdPB(uid: Int64.parseInt(userId));
+            final memberOrFailure =
+                await UserEventGetMemberInfo(payload).send();
+
+            if (!isClosed) {
+              memberOrFailure.fold(
+                (info) => add(ChatMemberEvent.receiveMemberInfo(userId, info)),
+                (err) => Log.error("Error getting member info: $err"),
+              );
+            }
           },
         );
       },

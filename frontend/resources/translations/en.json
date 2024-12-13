@@ -145,7 +145,8 @@
     "charCount": "Character count: {}",
     "createdAt": "Created: {}",
     "deleteView": "Delete",
-    "duplicateView": "Duplicate"
+    "duplicateView": "Duplicate",
+    "saveAsNewPage": "Save messages as a new page"
   },
   "importPanel": {
     "textAndMarkdown": "Text & Markdown",
@@ -204,7 +205,12 @@
     "uploadFile": "Attach PDFs, text or markdown files",
     "questionDetail": "Hi {}! How can I help you today?",
     "indexingFile": "Indexing {}",
-    "generatingResponse": "Generating response"
+    "generatingResponse": "Generating response",
+    "selectBanner": {
+      "selectMessages": "Select messages",
+      "nSelected": "{} selected",
+      "allSelected": "All selected"
+    }
   },
   "trash": {
     "text": "Trash",

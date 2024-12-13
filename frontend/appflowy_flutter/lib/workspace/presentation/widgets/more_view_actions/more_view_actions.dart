@@ -4,6 +4,7 @@ import 'package:appflowy/workspace/application/settings/appearance/appearance_cu
 import 'package:appflowy/workspace/application/sidebar/space/space_bloc.dart';
 import 'package:appflowy/workspace/application/user/user_workspace_bloc.dart';
 import 'package:appflowy/workspace/application/view/view_bloc.dart';
+import 'package:appflowy/workspace/application/view/view_ext.dart';
 import 'package:appflowy/workspace/application/view_info/view_info_bloc.dart';
 import 'package:appflowy/workspace/presentation/home/menu/view/view_action_type.dart';
 import 'package:appflowy/workspace/presentation/widgets/more_view_actions/widgets/common_view_action.dart';
@@ -21,14 +22,16 @@ class MoreViewActions extends StatefulWidget {
   const MoreViewActions({
     super.key,
     required this.view,
-    this.isDocument = true,
+    this.customActions = const [],
   });
 
   /// The view to show the actions for.
+  ///
   final ViewPB view;
 
-  /// If false the view is a Database, otherwise it is a Document.
-  final bool isDocument;
+  /// Custom actions to show in the popover, will be laid out at the top.
+  ///
+  final List<Widget> customActions;
 
   @override
   State<MoreViewActions> createState() => _MoreViewActionsState();
@@ -49,7 +52,7 @@ class _MoreViewActionsState extends State<MoreViewActions> {
       builder: (context, state) {
         return AppFlowyPopover(
           mutex: popoverMutex,
-          constraints: const BoxConstraints(maxWidth: 220),
+          constraints: const BoxConstraints(maxWidth: 245),
           offset: const Offset(0, 42),
           popupBuilder: (_) => _buildPopup(state),
           child: const _ThreeDots(),
@@ -106,7 +109,7 @@ class _MoreViewActionsState extends State<MoreViewActions> {
     final timeFormat = appearanceSettings.timeFormat;
 
     final viewMoreActionTypes = [
-      if (widget.isDocument) ViewMoreActionType.divider,
+      if (widget.view.isDocument) ViewMoreActionType.divider,
       ViewMoreActionType.duplicate,
       ViewMoreActionType.moveTo,
       ViewMoreActionType.delete,
@@ -114,11 +117,12 @@ class _MoreViewActionsState extends State<MoreViewActions> {
     ];
 
     final actions = [
-      if (widget.isDocument) ...[
+      ...widget.customActions,
+      if (widget.view.isDocument) ...[
         const FontSizeAction(),
       ],
       ...viewMoreActionTypes.map(
-        (type) => ViewAction(
+        (type) => CommonViewAction(
           type: type,
           view: widget.view,
           mutex: popoverMutex,
